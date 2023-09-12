@@ -37,13 +37,16 @@ export class UserService {
     file: File,
     associationId: string,
   ): Promise<User[]> {
+    
     return [];
   }
   public async getUserById(userId: string): Promise<User> {
-    return null;
+    const user = await this.userModel.findOne({ userId: userId });
+    return user;
   }
   public async getUserByEmail(email: string): Promise<User> {
-    return null;
+    const user = await this.userModel.findOne({ email: email });
+    return user;
   }
   public async getAssociationUsers(associationId: string): Promise<User[]> {
     return [];
