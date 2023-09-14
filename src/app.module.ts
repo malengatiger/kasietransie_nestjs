@@ -1,44 +1,39 @@
-import { MiddlewareConsumer, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthenticationModule } from './authentication/authentication.module';
 import { ConfigModule } from '@nestjs/config';
+// import { DatabaseModule } from './database/database.module';
+import { config } from 'src/config/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserModule } from './user/user.module';
-import { DataModule } from './data/data.module';
-import 'dotenv/config'; //
-import { DevtoolsModule } from '@nestjs/devtools-integration';
+import { MyUtils } from './my-utils/my-utils';
+import { DataService } from './data/data.service';
+import { AssociationController } from './association_controller/association_controller.controller';
+import { AssociationService } from './association_service/association_service.service';
+import { AppError, AppErrorSchema } from './data/models/appError';
+import { Association, AssociationSchema } from './data/models/association';
 import {
-  FirebaseModule,
-  FirebaseService,
-  FirebaseMiddleware,
-} from '@speakbox/nestjs-firebase-admin';
-import { KasieFbService } from './kasie-fb/kasie-fb.service';
-//
-console.log(`🔵 🔵 Kasie backend port : ${process.env.PORT}`);
-const dbUrl = process.env.DB_URI || 'checkUrl';
-console.log(`🌼🌼🌼 mongodb database 🌼 url: ${dbUrl}`);
+  SettingsModel,
+  SettingsModelSchema,
+} from './data/models/settingsModel';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: ['.env', '.env.development', '.env.production'],
       isGlobal: true,
+      load: [config],
     }),
-    MongooseModule.forRoot(dbUrl),
-    FirebaseModule,
-    AuthenticationModule,
-    UserModule,
-    DataModule,
-    DevtoolsModule.register({
-      http: process.env.NODE_ENV !== 'production',
-    }),
+    MongooseModule.forRoot(MyUtils.getDatabaseUrl()),
+    MongooseModule.forFeature([
+      { name: AppError.name, schema: AppErrorSchema },
+    ]),
+    MongooseModule.forFeature([
+      { name: Association.name, schema: AssociationSchema },
+    ]),
+    MongooseModule.forFeature([
+      { name: SettingsModel.name, schema: SettingsModelSchema },
+    ]),
   ],
-  controllers: [AppController],
-  providers: [AppService, FirebaseService, FirebaseMiddleware, KasieFbService],
+  controllers: [AppController, AssociationController],
+  providers: [AppService, DataService, AssociationService],
 })
-export class AppModule {
-  // configure(consumer: MiddlewareConsumer) {
-  //   consumer.apply(FirebaseModule).forRoutes(AppController);
-  // }
-}
+export class AppModule {}

@@ -1,22 +1,27 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import 'dotenv/config'; //
-//
-console.log(`🔵 🔵 AppModule: Kasie backend port : ${process.env.PORT}`);
-const dbUrl = process.env.DB_URI || 'checkUrl';
-const port = process.env.PORT || 9950;
-console.log(`🌼 🌼 🌼 AppModule: mongodb database 🌼 url: ${dbUrl}`);
+import { Logger } from '@nestjs/common';
+import * as helmet from 'helmet';
+import * as rateLimiter from 'express-rate-limit';
+import { ConfigService } from '@nestjs/config';
+
+import { MyUtils } from './my-utils/my-utils';
+const mm = '🔵 🔵 🔵 🔵 🔵 🔵 Kasie Transie Bootstrap 🔵 🔵';
+const env = process.env.NODE_ENV;
+Logger.log(`${mm} Kasie NODE_ENV : ${env}`);
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    snapshot: true, 
-  });
+  Logger.log(`${mm} ... Kasie NestJS Backend bootstrapping .....`);
+
+  const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  Logger.log(`${mm} ... Kasie ConfigService : ${configService}`);
+  const port = configService.get<number>('port');
+  Logger.log(`${mm} ... Kasie port from ConfigService : ${port}`);
+
+  // app.use(helmet());
   app.enableCors();
   await app.listen(port);
-  //
-  console.log(`main.ts: 🍎 🍎 🍎 bootstrap: Listening on Port ${port} ....`);
-  console.log(
-    `🔵 🔵 🔵 🔵 🔵 bootstrap: AppModule started with url: ${await app.getUrl()} ....`,
-  );
 }
 bootstrap();

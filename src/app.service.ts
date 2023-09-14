@@ -3,9 +3,9 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class AppService {
   getHello(): string {
-    return (
-      'Heita Daar! 🍎 🍎 🍎 🍎 Hello World! from AppService: ' +
-      new Date().getTime()
-    );
+    return 'Hello World!';
+  }
+  ping(): string {
+    return `Kasie Transie Pinged at ${new Date()}`;
   }
 }
