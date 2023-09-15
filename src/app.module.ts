@@ -16,6 +16,7 @@ import {
   SettingsModelSchema,
 } from './data/models/SettingsModel';
 import { User, UserSchema } from './data/models/User';
+import { MyFirebaseService } from './services/FirebaseService';
 
 @Module({
   imports: [
@@ -36,6 +37,6 @@ import { User, UserSchema } from './data/models/User';
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   controllers: [AppController, AssociationController],
-  providers: [AppService, DataService, AssociationService],
+  providers: [AppService, MyFirebaseService, DataService, AssociationService],
 })
 export class AppModule {}
