@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Position } from 'src/data/models/position';
+import { Position } from './position';
 @Schema({
   timestamps: true,
   collection: 'AppError',
@@ -7,6 +7,8 @@ import { Position } from 'src/data/models/position';
 export class AppError {
   @Prop()
   appErrorId: string;
+  @Prop()
+  associationId: string;
   @Prop()
   errorMessage: string;
   @Prop()
@@ -19,8 +21,7 @@ export class AppError {
   brand: string;
   @Prop()
   userId: string;
-  @Prop()
-  associationId: string;
+
   @Prop()
   userName: string;
   @Prop()

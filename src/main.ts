@@ -15,10 +15,8 @@ async function bootstrap() {
   Logger.log(`${mm} ... Kasie NestJS Backend bootstrapping .....`);
 
   const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService);
-  Logger.log(`${mm} ... Kasie ConfigService : ${configService}`);
-  const port = configService.get<number>('port');
-  Logger.log(`${mm} ... Kasie port from ConfigService : ${port}`);
+  const port = MyUtils.getPort();
+  Logger.log(`${mm} ... Kasie Backend running on port : ${port} `);
 
   // app.use(helmet());
   app.enableCors();

@@ -9,12 +9,13 @@ import { MyUtils } from './my-utils/my-utils';
 import { DataService } from './data/data.service';
 import { AssociationController } from './association_controller/association_controller.controller';
 import { AssociationService } from './association_service/association_service.service';
-import { AppError, AppErrorSchema } from './data/models/appError';
-import { Association, AssociationSchema } from './data/models/association';
+import { AppError, AppErrorSchema } from './data/models/AppError';
+import { Association, AssociationSchema } from './data/models/Association';
 import {
   SettingsModel,
   SettingsModelSchema,
-} from './data/models/settingsModel';
+} from './data/models/SettingsModel';
+import { User, UserSchema } from './data/models/User';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import {
     MongooseModule.forFeature([
       { name: SettingsModel.name, schema: SettingsModelSchema },
     ]),
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   controllers: [AppController, AssociationController],
   providers: [AppService, DataService, AssociationService],

@@ -4,10 +4,9 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
   collection: 'SettingsModel',
 })
 export class SettingsModel {
-  @Prop()
   _partitionKey: string;
-  @Prop()
   _id: string;
+  //
   @Prop()
   associationId: string;
   @Prop()
