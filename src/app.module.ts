@@ -18,6 +18,34 @@ import {
 import { User, UserSchema } from './data/models/User';
 import { MyFirebaseService } from './services/FirebaseService';
 import { ExampleFile, ExampleFileSchema } from './data/models/ExampleFile';
+import { FileArchiverService } from './my-utils/zipper';
+import { Vehicle, VehicleSchema } from './data/models/Vehicle';
+import { MessagingService } from './messaging/messaging.service';
+import { DispatchService } from './services/DispatchService';
+import {
+  RouteLandmark,
+  RouteLandmarkSchema,
+} from './data/models/RouteLandmark';
+import {
+  RouteAssignment,
+  RouteAssignmentSchema,
+} from './data/models/RouteAssignment';
+import { Route, RouteSchema } from './data/models/Route';
+import { DispatchRecord, DispatchRecordSchema } from 'src/data/models/DispatchRecord';
+import {
+  VehicleArrival,
+  VehicleArrivalSchema,
+} from './data/models/VehicleArrival';
+import {
+  VehicleDeparture,
+  VehicleDepartureSchema,
+} from './data/models/VehicleDeparture';
+import {
+  AmbassadorPassengerCount,
+  AmbassadorPassengerCountSchema,
+} from './data/models/AmbassadorPassengerCount';
+import { RoutePoint, RoutePointSchema } from './data/models/RoutePoint';
+import { DispatchController } from './controllers/dispatch_controller';
 
 @Module({
   imports: [
@@ -39,8 +67,42 @@ import { ExampleFile, ExampleFileSchema } from './data/models/ExampleFile';
       { name: ExampleFile.name, schema: ExampleFileSchema },
     ]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([{ name: Vehicle.name, schema: VehicleSchema }]),
+    MongooseModule.forFeature([
+      { name: RouteLandmark.name, schema: RouteLandmarkSchema },
+    ]),
+    MongooseModule.forFeature([{ name: Route.name, schema: RouteSchema }]),
+    MongooseModule.forFeature([
+      { name: DispatchRecord.name, schema: DispatchRecordSchema },
+    ]),
+    MongooseModule.forFeature([
+      { name: RouteAssignment.name, schema: RouteAssignmentSchema },
+    ]),
+    MongooseModule.forFeature([
+      { name: VehicleArrival.name, schema: VehicleArrivalSchema },
+    ]),
+    MongooseModule.forFeature([
+      { name: VehicleDeparture.name, schema: VehicleDepartureSchema },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: AmbassadorPassengerCount.name,
+        schema: AmbassadorPassengerCountSchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      { name: RoutePoint.name, schema: RoutePointSchema },
+    ]),
   ],
-  controllers: [AppController, AssociationController],
-  providers: [AppService, MyFirebaseService, DataService, AssociationService],
+  controllers: [AppController, AssociationController, DispatchController],
+  providers: [
+    AppService,
+    MyFirebaseService,
+    DataService,
+    AssociationService,
+    FileArchiverService,
+    MessagingService,
+    DispatchService,
+  ],
 })
 export class AppModule {}

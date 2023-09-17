@@ -20,6 +20,7 @@ import { VehicleBag } from 'src/data/helpers/VehicleBag';
 import { CommuterRequest } from 'src/data/models/CommuterRequest';
 import { RoutePoint } from 'src/data/models/RoutePoint';
 import { VehicleHeartbeat } from 'src/data/models/VehicleHeartbeat';
+import { MessagingService } from 'src/messaging/messaging.service';
 
 const mm = 'DispatchService';
 
@@ -27,6 +28,7 @@ const mm = 'DispatchService';
 export class DispatchService {
   constructor(
     private configService: ConfigService,
+    private messagingService: MessagingService,
     @InjectModel(User.name)
     private userModel: mongoose.Model<User>,
 
@@ -174,7 +176,11 @@ export class DispatchService {
   public async addDispatchRecord(
     dispatchRecord: DispatchRecord,
   ): Promise<DispatchRecord> {
-    return null;
+    const res = await this.dispatchRecordModel.create(dispatchRecord);
+    this.messagingService.sendDispatchMessage(dispatchRecord);
+    Logger.log(`${mm} ... add DispatchRecord completed: 🛎🛎`);
+    Logger.log(`${mm} ${res}`);
+    return res;
   }
   public async getVehicleArrivalsByDate(
     vehicleId: string,
@@ -197,7 +203,19 @@ export class DispatchService {
     vehicleId: string,
     startDate: string,
   ): Promise<DispatchRecord[]> {
-    return [];
+    Logger.log(
+      `${mm} getVehicleDispatchRecords: vehicleId: ${vehicleId} startDate: ${startDate}`,
+    );
+    const res = await this.dispatchRecordModel
+      .find({
+        vehicleId: vehicleId,
+        created: { $gte: startDate },
+      })
+      .sort({ created: -1 });
+    Logger.log(
+      `${mm} ... getVehicleDispatchRecords found: 🛎 ${res.length} 🛎`,
+    );
+    return res;
   }
   public async getVehiclePassengerCounts(
     vehicleId: string,

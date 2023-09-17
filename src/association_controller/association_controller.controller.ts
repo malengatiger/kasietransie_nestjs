@@ -21,6 +21,7 @@ import { Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as mime from 'mime';
+import { Vehicle } from 'src/data/models/Vehicle';
 const mm = '🍐🍐🍐 AssociationController';
 
 @Controller('api/v1')
@@ -46,6 +47,17 @@ export class AssociationController {
       `${mm} ... getAssociationUsers starting, id: ${query.associationId} ...`,
     );
     return await this.associationService.getAssociationUsers(
+      query.associationId,
+    );
+  }
+  @Get('getAssociationVehicles')
+  async getAssociationVehicles(
+    @Query() query: { associationId: string },
+  ): Promise<Vehicle[]> {
+    Logger.log(
+      `${mm} ... getAssociationVehicles starting, id: ${query.associationId} ...`,
+    );
+    return await this.associationService.getAssociationVehicles(
       query.associationId,
     );
   }
@@ -84,6 +96,22 @@ export class AssociationController {
   @Get('downloadExampleVehiclesFile')
   public async downloadExampleVehiclesFile(): Promise<File> {
     return null;
+  }
+  @Get('getAssociationVehiclesZippedFile')
+  public async getAssociationVehiclesZippedFile(
+    @Query() query: { associationId: string },
+    @Res() res: Response,
+  ) {
+    try {
+      const fileName =
+        await this.associationService.getAssociationVehiclesZippedFile(
+          query.associationId,
+        );
+      this.sendFile(fileName, res);
+    } catch (error) {
+      Logger.log(`${mm} 👿👿👿👿 Error getting vehicle zipped file:`, error);
+      res.status(500).send(`${mm} 👿👿👿 Error downloading file: ${error}`);
+    }
   }
   @Get('downloadExampleUserCSVFile')
   public async downloadExampleUserCSVFile(@Res() res: Response) {

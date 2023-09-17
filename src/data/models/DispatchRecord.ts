@@ -5,9 +5,8 @@ import { Position } from './position';
   collection: 'DispatchRecord',
 })
 export class DispatchRecord {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   dispatchRecordId: string;

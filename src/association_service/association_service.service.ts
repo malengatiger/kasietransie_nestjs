@@ -15,12 +15,15 @@ import * as archiver from 'archiver';
 import * as fs from 'fs';
 import * as path from 'path';
 import admin from 'firebase-admin';
+import { Vehicle } from 'src/data/models/Vehicle';
+import { FileArchiverService } from 'src/my-utils/zipper';
 
 const mm = '🍎🍎🍎 AssociationService: 🍎🍎🍎';
 @Injectable()
 export class AssociationService {
   constructor(
     private configService: ConfigService,
+    private archiveService: FileArchiverService,
     //
     @InjectModel(User.name)
     private userModel: mongoose.Model<User>,
@@ -33,6 +36,9 @@ export class AssociationService {
 
     @InjectModel(ExampleFile.name)
     private exampleFileModel: mongoose.Model<ExampleFile>,
+
+    @InjectModel(Vehicle.name)
+    private vehicleModel: mongoose.Model<Vehicle>,
 
     @InjectModel(SettingsModel.name)
     private settingsModel: mongoose.Model<SettingsModel>,
@@ -51,6 +57,31 @@ export class AssociationService {
     const list = await this.userModel.find({ associationId: associationId });
     Logger.log(`${mm} ... getAssociationUsers found: ${list.length} ...`);
     return list;
+  }
+  public async getAssociationVehicles(
+    associationId: string,
+  ): Promise<Vehicle[]> {
+    Logger.log(
+      `${mm} ... getAssociationVehicles starting, id: ${associationId} ...`,
+    );
+    const list = await this.vehicleModel.find({ associationId: associationId });
+    Logger.log(`${mm} ... getAssociationVehicles found: ${list.length} ...`);
+    return list;
+  }
+  public async getAssociationVehiclesZippedFile(
+    associationId: string,
+  ): Promise<string> {
+    Logger.log(
+      `${mm} ... getAssociationVehicles starting, id: ${associationId} ...`,
+    );
+    const list = await this.getAssociationVehicles(associationId);
+    const json = JSON.stringify(list);
+
+    const file = await this.archiveService.createZipArchive([
+      { name: 'vehicles', content: json },
+    ]);
+    Logger.log(`${mm} ... getAssociationVehicles found: ${list.length} ...`);
+    return file;
   }
   public async getAssociationById(associationId: string): Promise<Association> {
     return null;
