@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable, Logger, Res } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
@@ -10,8 +10,6 @@ import { RegistrationBag } from 'src/data/models/RegistrationBag';
 import { AppErrors } from 'src/data/helpers/AppErrors';
 import { User } from 'src/data/models/User';
 import { AppError } from 'src/data/models/AppError';
-import { DownloadResponse, Storage } from '@google-cloud/storage';
-import * as archiver from 'archiver';
 import * as fs from 'fs';
 import * as path from 'path';
 import admin from 'firebase-admin';
@@ -77,9 +75,7 @@ export class AssociationService {
     const list = await this.getAssociationVehicles(associationId);
     const json = JSON.stringify(list);
 
-    const file = await this.archiveService.createZipArchive([
-      { name: 'vehicles', content: json },
-    ]);
+    const file = await this.archiveService.zip([{ content: json }]);
     Logger.log(`${mm} ... getAssociationVehicles found: ${list.length} ...`);
     return file;
   }
@@ -143,22 +139,6 @@ export class AssociationService {
         `${mm} Downloading file, csFile: ${csFile.cloudStorageURI} tempFilePath: ${tempFilePath} .....`,
       );
 
-      // csFile.download().then(function (data) {
-      //   Logger.log(`${mm} .... ${data[0]}`);
-      //   const contents = data[0];
-      //   Logger.log(contents);
-      // });
-      // const options = {
-      //   destination: tempFilePath,
-      // };
-
-      // // Downloads the file
-      // const resp = await storage
-      //   .bucket(bucketName)
-      //   .file(fileName)
-      //   .download(options);
-      // Logger.log(`${mm} .... response: ${resp[0]}`);
-
       const contents = await csFile.download();
       const fileContent = contents[0];
       Logger.log(
@@ -168,12 +148,7 @@ export class AssociationService {
       const writeStream = fs.createWriteStream(tempFilePath);
       writeStream.write(fileContent);
       writeStream.end();
-      // fs.writeFileSync(tempFilePath, '');
-      // Write the file content to the tempFilePath
-      //fs.writeFileSync(tempFilePath, fileContent);
-      // const [x] = await csFile.download({
-      //   destination: tempFilePath,
-      // });
+
       Logger.log(`${mm} x marks the spot, tempFilePath: ${tempFilePath}`);
       return tempFilePath;
     } catch (error) {
@@ -191,6 +166,8 @@ export class AssociationService {
   public async registerAssociation(
     association: Association,
   ): Promise<RegistrationBag> {
+    Logger.log(`${mm} registerAssociation ...`);
+
     return null;
   }
   public async addSettingsModel(model: SettingsModel): Promise<SettingsModel> {

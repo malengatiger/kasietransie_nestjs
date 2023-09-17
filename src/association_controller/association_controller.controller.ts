@@ -22,6 +22,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as mime from 'mime';
 import { Vehicle } from 'src/data/models/Vehicle';
+import { MyUtils } from 'src/my-utils/my-utils';
 const mm = '🍐🍐🍐 AssociationController';
 
 @Controller('api/v1')
@@ -68,7 +69,16 @@ export class AssociationController {
     return this.associationService.getAssociationById(query.associationId);
   }
   //getAssociationAppErrors
-
+  @Get('getQRCode')
+  public async getQRCode(
+    @Query() query: { input: string; prefix: string; size: number },
+  ): Promise<string> {
+    return await MyUtils.createQRCodeAndUploadToCloudStorage(
+      query.input,
+      query.prefix,
+      query.size,
+    );
+  }
   @Get('getAssociationAppErrors')
   public async getAssociationAppErrors(
     @Query() query: { associationId: string },

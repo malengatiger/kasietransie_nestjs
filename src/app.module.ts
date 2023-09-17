@@ -31,7 +31,10 @@ import {
   RouteAssignmentSchema,
 } from './data/models/RouteAssignment';
 import { Route, RouteSchema } from './data/models/Route';
-import { DispatchRecord, DispatchRecordSchema } from 'src/data/models/DispatchRecord';
+import {
+  DispatchRecord,
+  DispatchRecordSchema,
+} from 'src/data/models/DispatchRecord';
 import {
   VehicleArrival,
   VehicleArrivalSchema,

@@ -6,10 +6,11 @@ const mm = '🍎🍎🍎 FileArchiverService: 🍎🍎🍎';
 
 @Injectable()
 export class FileArchiverService {
-  async createZipArchive(
-    fileContents: { name: string; content: string }[],
-  ): Promise<string> {
-    const zipFileName = 'file.zip';
+  async zip(fileContents: { content: string }[]): Promise<string> {
+    const timestamp = Date.now().toString();
+    const randomString = Math.random().toString(36).substring(2, 8);
+    const key = `${timestamp}_${randomString}`;
+    const zipFileName = `file${key}.zip`;
     const zipFilePath = path.join(__dirname, '..', 'tempFiles', zipFileName);
 
     return new Promise<string>((resolve, reject) => {
@@ -29,7 +30,7 @@ export class FileArchiverService {
       archive.pipe(output);
 
       for (const file of fileContents) {
-        archive.append(file.content, { name: file.name });
+        archive.append(file.content, { name: zipFileName });
       }
       Logger.log(`${mm} ... finalize archive`);
 
