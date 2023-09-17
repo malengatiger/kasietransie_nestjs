@@ -17,6 +17,7 @@ import {
 } from './data/models/SettingsModel';
 import { User, UserSchema } from './data/models/User';
 import { MyFirebaseService } from './services/FirebaseService';
+import { ExampleFile, ExampleFileSchema } from './data/models/ExampleFile';
 
 @Module({
   imports: [
@@ -33,6 +34,9 @@ import { MyFirebaseService } from './services/FirebaseService';
     ]),
     MongooseModule.forFeature([
       { name: SettingsModel.name, schema: SettingsModelSchema },
+    ]),
+    MongooseModule.forFeature([
+      { name: ExampleFile.name, schema: ExampleFileSchema },
     ]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],

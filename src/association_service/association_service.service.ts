@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
@@ -10,6 +10,11 @@ import { RegistrationBag } from 'src/data/models/RegistrationBag';
 import { AppErrors } from 'src/data/helpers/AppErrors';
 import { User } from 'src/data/models/User';
 import { AppError } from 'src/data/models/AppError';
+import { DownloadResponse, Storage } from '@google-cloud/storage';
+import * as archiver from 'archiver';
+import * as fs from 'fs';
+import * as path from 'path';
+import admin from 'firebase-admin';
 
 const mm = '🍎🍎🍎 AssociationService: 🍎🍎🍎';
 @Injectable()
@@ -25,6 +30,9 @@ export class AssociationService {
 
     @InjectModel(Association.name)
     private associationModel: mongoose.Model<Association>,
+
+    @InjectModel(ExampleFile.name)
+    private exampleFileModel: mongoose.Model<ExampleFile>,
 
     @InjectModel(SettingsModel.name)
     private settingsModel: mongoose.Model<SettingsModel>,
@@ -66,6 +74,89 @@ export class AssociationService {
   public async downloadExampleVehiclesFile(): Promise<File> {
     return null;
   }
+
+  public async downloadExampleUserCSVFile(): Promise<string> {
+    Logger.log(`${mm} .... downloadExampleUserCSVFile ...................`);
+    const fileName = `users.csv`;
+    return this.downloadFileFromStorage(fileName);
+  }
+  public async downloadExampleUserJSONFile(): Promise<string> {
+    Logger.log(`${mm} .... downloadExampleUserJSONFile ...................`);
+    const fileName = `users.json`;
+    return this.downloadFileFromStorage(fileName);
+  }
+  public async downloadExampleVehicleCSVFile(): Promise<string> {
+    Logger.log(`${mm} .... downloadExampleVehicleCSVFile ...................`);
+    const fileName = `vehicles.csv`;
+    return this.downloadFileFromStorage(fileName);
+  }
+  public async downloadExampleVehicleJSONFile(): Promise<string> {
+    Logger.log(`${mm} .... downloadExampleVehicleJSONFile ...................`);
+    const fileName = `vehicles.json`;
+    return this.downloadFileFromStorage(fileName);
+  }
+
+  async downloadFileFromStorage(fileName: string): Promise<string> {
+    const tempDir = path.join(__dirname, '..', 'tempFiles');
+    const tempFilePath = path.join(tempDir, fileName);
+    const storage = admin.storage();
+    const folder = process.env.BUCKET_FOLDER;
+
+    try {
+      // Create the temporary directory if it doesn't exist
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+      const csFile = storage.bucket().file(`${folder}/${fileName}`);
+      Logger.log(
+        `${mm} Downloading file, csFile: ${csFile.cloudStorageURI} tempFilePath: ${tempFilePath} .....`,
+      );
+
+      // csFile.download().then(function (data) {
+      //   Logger.log(`${mm} .... ${data[0]}`);
+      //   const contents = data[0];
+      //   Logger.log(contents);
+      // });
+      // const options = {
+      //   destination: tempFilePath,
+      // };
+
+      // // Downloads the file
+      // const resp = await storage
+      //   .bucket(bucketName)
+      //   .file(fileName)
+      //   .download(options);
+      // Logger.log(`${mm} .... response: ${resp[0]}`);
+
+      const contents = await csFile.download();
+      const fileContent = contents[0];
+      Logger.log(
+        `${mm} ${fileContent}  🔵🔵🔵 fileContent.byteLength: ${fileContent.byteLength}`,
+      );
+      //Create a writable stream to write the file content
+      const writeStream = fs.createWriteStream(tempFilePath);
+      writeStream.write(fileContent);
+      writeStream.end();
+      // fs.writeFileSync(tempFilePath, '');
+      // Write the file content to the tempFilePath
+      //fs.writeFileSync(tempFilePath, fileContent);
+      // const [x] = await csFile.download({
+      //   destination: tempFilePath,
+      // });
+      Logger.log(`${mm} x marks the spot, tempFilePath: ${tempFilePath}`);
+      return tempFilePath;
+    } catch (error) {
+      Logger.log(`${mm} Error downloading file: ${error}`);
+      throw new Error('Failed to download file');
+    }
+  }
+
+  private generateUniqueId(): string {
+    const timestamp = Date.now().toString();
+    const randomString = Math.random().toString(36).substring(2, 8);
+    return `${timestamp}_${randomString}`;
+  }
+
   public async registerAssociation(
     association: Association,
   ): Promise<RegistrationBag> {
@@ -90,9 +181,6 @@ export class AssociationService {
     return this.appErrorModel.find({ associationId: associationId }).exec();
   }
 
-  public async downloadExampleUsersFile(): Promise<File> {
-    return null;
-  }
   public async generateFakeAssociation(
     associationName: string,
     email: string,

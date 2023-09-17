@@ -1,5 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Body, Controller, Get, Logger, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Logger,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { AssociationService } from 'src/association_service/association_service.service';
 import { AppErrors } from 'src/data/helpers/AppErrors';
 import { Association } from 'src/data/models/Association';
@@ -8,11 +16,19 @@ import { RegistrationBag } from 'src/data/models/RegistrationBag';
 import { SettingsModel } from 'src/data/models/SettingsModel';
 import { User } from 'src/data/models/User';
 import { AppError } from 'src/data/models/AppError';
+import { MyFirebaseService } from 'src/services/FirebaseService';
+import { Response } from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as mime from 'mime';
 const mm = '🍐🍐🍐 AssociationController';
 
 @Controller('api/v1')
 export class AssociationController {
-  constructor(private readonly associationService: AssociationService) {}
+  constructor(
+    private readonly associationService: AssociationService,
+    private readonly fbService: MyFirebaseService,
+  ) {}
 
   @Get('getAssociations')
   async getAssociations(): Promise<Association[]> {
@@ -53,6 +69,7 @@ export class AssociationController {
       query.associationId,
     );
   }
+
   public async getAssociationSettingsModels(
     @Query() query: { associationId: string },
   ): Promise<SettingsModel[]> {
@@ -68,6 +85,66 @@ export class AssociationController {
   public async downloadExampleVehiclesFile(): Promise<File> {
     return null;
   }
+  @Get('downloadExampleUserCSVFile')
+  public async downloadExampleUserCSVFile(@Res() res: Response) {
+    try {
+      const fileName =
+        await this.associationService.downloadExampleUserCSVFile();
+      this.sendFile(fileName, res);
+    } catch (error) {
+      Logger.log(`${mm} 👿👿👿👿 Error downloading file:`, error);
+      res
+        .status(500)
+        .send(`${mm} 👿👿👿 Error downloading example file: ${error}`);
+    }
+  }
+  @Get('downloadExampleUserJSONFile')
+  public async downloadExampleUserJSONFile(@Res() res: Response) {
+    try {
+      const fileName =
+        await this.associationService.downloadExampleUserJSONFile();
+      this.sendFile(fileName, res);
+    } catch (error) {
+      Logger.log(`${mm} 👿👿👿👿 Error downloading file:`, error);
+      res
+        .status(500)
+        .send(`${mm} 👿👿👿 Error downloading example file: ${error}`);
+    }
+  }
+  @Get('downloadExampleVehicleCSVFile')
+  public async downloadExampleVehicleCSVFile(@Res() res: Response) {
+    try {
+      const fileName =
+        await this.associationService.downloadExampleVehicleCSVFile();
+      this.sendFile(fileName, res);
+    } catch (error) {
+      Logger.log(`${mm} 👿👿👿👿 Error downloading file:`, error);
+      res
+        .status(500)
+        .send(`${mm} 👿👿👿 Error downloading example file: ${error}`);
+    }
+  }
+  @Get('downloadExampleVehicleJSONFile')
+  public async downloadExampleVehicleJSONFile(@Res() res: Response) {
+    try {
+      const fileName =
+        await this.associationService.downloadExampleVehicleJSONFile();
+      this.sendFile(fileName, res);
+    } catch (error) {
+      Logger.log(`${mm} 👿👿👿👿 Error downloading file:`, error);
+      res
+        .status(500)
+        .send(`${mm} 👿👿👿 Error downloading example file: ${error}`);
+    }
+  }
+  private sendFile(fileName: string, res: Response<any, Record<string, any>>) {
+    Logger.log(`${mm} ... about to return: ${fileName}`);
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename=users.csv`);
+    // Send the file as the response
+    res.sendFile(fileName);
+  }
+
   @Post('registerAssociation')
   public async registerAssociation(
     @Body() association: Association,

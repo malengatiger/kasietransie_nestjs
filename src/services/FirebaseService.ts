@@ -5,6 +5,8 @@ import { initializeApp } from 'firebase-admin/app';
 import { getMessaging } from 'firebase-admin/messaging';
 import * as admin from 'firebase-admin';
 import { GoogleAuth } from 'google-auth-library';
+import axios from 'axios';
+
 const mm = '🍑 🍑 🍑 FirebaseService 🍑 ';
 const firebaseConfig = {
   apiKey: 'AIzaSyAdOBFxPS1TacnK5OZTU6VxOQ20Bq8Cyrg',
@@ -20,16 +22,11 @@ const firebaseConfig = {
 export class MyFirebaseService {
   public async initializeFirebase(): Promise<void> {
     Logger.log(`${mm} ... Initializing Firebase ...`);
-    // const app = initializeApp();
-    //
-    // Use the authenticated client to initialize the Firebase Admin SDK
     const app1 = admin.initializeApp(firebaseConfig);
-    //
     Logger.log(`${mm} ... Firebase initialized: name: ${app1.name}   ...`);
-
     return null;
   }
-  async sendFCMMessage() {
+  async sendInitializationMessage() {
     const message: admin.messaging.Message = {
       topic: 'adminTopic',
       data: {
@@ -44,30 +41,44 @@ export class MyFirebaseService {
 
     try {
       const response = await admin.messaging().send(message);
-      Logger.log(`${mm} 🅿️ 🅿️ 🅿️  Successfully sent FCM message: ${response}`);
+      Logger.log(
+        `${mm} 🅿️ 🅿️ 🅿️  Successfully sent FCM message: \n🚺 🚺 🚺 ${JSON.stringify(
+          message,
+        )} \n🚺 🚺 🚺 FCM response: ${response}`,
+      );
     } catch (error) {
       console.error('Error sending message:', error);
     }
   }
 
-  public async sendInitializationMessage(): Promise<any> {
-    // The topic name can be optionally prefixed with "/topics/".
-    const topic = 'adminTopic';
-    Logger.log(`${mm} ... Sending initialization message`);
-    const message = {
-      notification: {
-        title: 'Kasie Transie Backend',
-        body: 'Kasie Transie is running good!',
-      },
-      data: {
-        message: 'Kasie Transie Backend Server started!',
-        time: `${new Date(new Date().getTime())}`,
-      },
-    };
+  async getMessagesFromFCMTopic(topic: string): Promise<any[]> {
+    const serverKey = process.env.FIREBASE_SERVER_KEY; // Replace with your FCM server key
+    const messages: any[] = [];
     Logger.log(
-      `${mm} ... sending Kasie init message ${message} to topic: ${topic} ...`,
+      `${mm} .... getMessagesFromFCMTopic geting messages from ${topic}`,
     );
-    getMessaging().sendToTopic(topic, message);
-    return message;
+    try {
+      const response = await axios.post(
+        `https://fcm.googleapis.com/v1/projects/${process.env.GOOGLE_CLOUD_PROJECT}/messages:list`,
+        {
+          topic: `projects/${process.env.GOOGLE_CLOUD_PROJECT}/topics/${topic}`,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${serverKey}`,
+          },
+        },
+      );
+
+      const messages = response.data.messages;
+      console.log(`${mm} Messages from adminTopic:`, messages);
+      // Process the messages as per your requirements
+    } catch (error) {
+      console.error('${mm} Error retrieving messages:', error);
+    }
+    Logger.log(
+      `${mm} .... getMessagesFromFCMTopic found ${messages} messages from ${topic}`,
+    );
+    return messages;
   }
 }

@@ -26,6 +26,6 @@ async function bootstrap() {
   app.enableCors();
   await app.listen(port);
   await srv.initializeFirebase();
-  await srv.sendFCMMessage();
+  await srv.sendInitializationMessage();
 }
 bootstrap();
