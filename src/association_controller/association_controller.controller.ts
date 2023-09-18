@@ -24,13 +24,16 @@ import * as mime from 'mime';
 import { Vehicle } from 'src/data/models/Vehicle';
 import { MyUtils } from 'src/my-utils/my-utils';
 import { Country } from 'src/data/models/Country';
+import { TranslationInput } from 'src/data/helpers/TranslationInput';
+import { TranslationBag } from 'src/data/models/TranslationBag';
+import { TranslationService } from 'src/translation/translation.service';
 const mm = '🍐🍐🍐 AssociationController';
 
 @Controller('api/v1')
 export class AssociationController {
   constructor(
     private readonly associationService: AssociationService,
-    private readonly fbService: MyFirebaseService,
+    private readonly txService: TranslationService,
   ) {}
 
   @Get('getCountries')
@@ -194,6 +197,12 @@ export class AssociationController {
   ): Promise<RegistrationBag> {
     return null;
   }
+  @Post('translateStrings')
+  public async translateStrings(
+    @Body() inputs: TranslationInput[],
+  ): Promise<TranslationBag[]> {
+    return this.txService.translateStrings(inputs);
+  }
   @Post('addSettingsModel')
   public async addSettingsModel(
     @Body() model: SettingsModel,
@@ -206,7 +215,7 @@ export class AssociationController {
     return this.associationService.addAppError(error);
   }
   @Post('addAppErrors')
-  public async addAppErrors(@Body() errors: AppErrors): Promise<AppError[]> {
+  public async addAppErrors(@Body() errorList: AppErrors): Promise<AppError[]> {
     return [];
   }
 

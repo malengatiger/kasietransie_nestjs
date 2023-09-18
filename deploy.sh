@@ -16,7 +16,7 @@ docker buildx build --platform linux/amd64 -t gcr.io/$PROJECT_ID/$IMAGE_NAME .
 echo "\n🐦🐦🐦 Push the Docker image ... 🔵🐦🔵🐦🔵🐦"
 
 docker push gcr.io/$PROJECT_ID/$IMAGE_NAME
-echo "🍎🍎🍎🍎🍎🍎🍎🍎🍎 start deployment to Cloud Run"
+echo "🍎 🍎 🍎 🍎 🍎 🍎 🍎 🍎 🍎 start deployment to Cloud Run"
 # Deploy the app to Cloud Run
 gcloud run deploy $SERVICE_NAME \
   --image gcr.io/$PROJECT_ID/$IMAGE_NAME \
@@ -24,4 +24,4 @@ gcloud run deploy $SERVICE_NAME \
   --region $REGION \
   --allow-unauthenticated
 
-echo "🍎🍎🍎🍎🍎🍎🍎🍎🍎 Hopefully, we have deployed successfully\n"
+echo "🍎 🍎 🍎 🍎 🍎 🍎 🍎 🍎 🍎 Hopefully, we have deployed successfully\n"

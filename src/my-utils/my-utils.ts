@@ -9,17 +9,20 @@ const mm = '🥦 🥦 🥦 🥦 MyUtils 🥦🥦';
 export abstract class MyUtils {
   public static getDatabaseUrl(): string {
     const env = process.env.NODE_ENV;
-    let dbUrl: string = '';
+    let dbUrl: string;
     if (env === 'production') {
       dbUrl = process.env.REMOTE_DB_URI;
     } else {
       dbUrl = process.env.LOCAL_DB_URI;
     }
+    if (!dbUrl) {
+      dbUrl = process.env.REMOTE_DB_URI;
+    }
     Logger.log(`${mm} 🍷🍷 dbUrl: ${dbUrl}`);
     return dbUrl;
   }
   public static getPort(): string {
-    let port: string = '';
+    let port: string;
     const env = process.env.NODE_ENV;
 
     if (env === 'production') {
@@ -28,7 +31,9 @@ export abstract class MyUtils {
       port = process.env.LOCAL_PORT;
     }
     Logger.log(`${mm} port: ${port} 🍷🍷 `);
-
+    if (!port) {
+      port = process.env.REMOTE_PORT;
+    }
     return port;
   }
   public static async createQRCodeAndUploadToCloudStorage(

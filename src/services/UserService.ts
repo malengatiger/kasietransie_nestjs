@@ -9,6 +9,7 @@ import { Express } from 'express';
 import * as admin from 'firebase-admin';
 import qrcode from 'qrcode';
 import { Storage } from '@google-cloud/storage';
+import { MyUtils } from 'src/my-utils/my-utils';
 
 const mm = 'UserService';
 
@@ -58,7 +59,11 @@ export class UserService {
       if (userRecord.uid) {
         const uid = userRecord.uid;
         user.userId = uid;
-        createUserQRCode(user);
+        MyUtils.createQRCodeAndUploadToCloudStorage(
+          JSON.stringify(user),
+          `${user.firstName} ${user.lastName}`,
+          1,
+        );
         user.password = null;
 
         const mUser = await this.userModel.create(user);

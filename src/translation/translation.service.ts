@@ -73,18 +73,18 @@ export class TranslationService {
         cnt++;
       }
       Logger.log(
-        `${mm} Translation from English to ${code} completed ${cnt} successfully`,
+        `${mm} Translation from English to 🍎 ${code} completed ${cnt} successfully`,
       );
     }
     Logger.log(
-      `${mm} Translation completed successfully for ${translationBags.length} total translations`,
+      `${mm} Translation completed successfully for 🍎 ${translationBags.length} total translations`,
     );
     await this.translationModel.create(translationBags);
     Logger.log(`${mm} TranslationBags written to Mongo`);
 
     const endTime = performance.performance.now();
     const elapsedTime = (endTime - startTime) / 1000; // Convert to seconds
-    Logger.log(`${mm} Translation elapsed time: ${elapsedTime} seconds`);
+    Logger.log(`${mm} Translation elapsed time: 🍎 ${elapsedTime} seconds`);
     return translationBags;
   }
   async convertCsvToJson(csvContent: string): Promise<any[]> {
