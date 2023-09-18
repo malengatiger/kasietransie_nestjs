@@ -49,7 +49,15 @@ import {
 } from './data/models/AmbassadorPassengerCount';
 import { RoutePoint, RoutePointSchema } from './data/models/RoutePoint';
 import { DispatchController } from './controllers/dispatch_controller';
-
+import { TranslationService } from './translation/translation.service';
+import { TranslationController } from './translation/translation.controller';
+import { UserController } from './user/user.controller';
+// import { Country, CountrySchema } from './data/models/Country';
+import {
+  TranslationBag,
+  TranslationBagSchema,
+} from './data/models/TranslationBag';
+import { Country, CountrySchema } from 'src/data/models/Country';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -60,6 +68,7 @@ import { DispatchController } from './controllers/dispatch_controller';
     MongooseModule.forFeature([
       { name: AppError.name, schema: AppErrorSchema },
     ]),
+    MongooseModule.forFeature([{ name: Country.name, schema: CountrySchema }]),
     MongooseModule.forFeature([
       { name: Association.name, schema: AssociationSchema },
     ]),
@@ -96,8 +105,17 @@ import { DispatchController } from './controllers/dispatch_controller';
     MongooseModule.forFeature([
       { name: RoutePoint.name, schema: RoutePointSchema },
     ]),
+    MongooseModule.forFeature([
+      { name: TranslationBag.name, schema: TranslationBagSchema },
+    ]),
   ],
-  controllers: [AppController, AssociationController, DispatchController],
+  controllers: [
+    AppController,
+    AssociationController,
+    DispatchController,
+    TranslationController,
+    UserController,
+  ],
   providers: [
     AppService,
     MyFirebaseService,
@@ -106,6 +124,7 @@ import { DispatchController } from './controllers/dispatch_controller';
     FileArchiverService,
     MessagingService,
     DispatchService,
+    TranslationService,
   ],
 })
 export class AppModule {}

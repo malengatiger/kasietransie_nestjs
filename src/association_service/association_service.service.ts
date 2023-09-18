@@ -15,6 +15,7 @@ import * as path from 'path';
 import admin from 'firebase-admin';
 import { Vehicle } from 'src/data/models/Vehicle';
 import { FileArchiverService } from 'src/my-utils/zipper';
+import { Country } from 'src/data/models/Country';
 
 const mm = '🍎🍎🍎 AssociationService: 🍎🍎🍎';
 @Injectable()
@@ -37,6 +38,9 @@ export class AssociationService {
 
     @InjectModel(Vehicle.name)
     private vehicleModel: mongoose.Model<Vehicle>,
+
+    @InjectModel(Country.name)
+    private countryModel: mongoose.Model<Country>,
 
     @InjectModel(SettingsModel.name)
     private settingsModel: mongoose.Model<SettingsModel>,
@@ -80,8 +84,14 @@ export class AssociationService {
     return file;
   }
   public async getAssociationById(associationId: string): Promise<Association> {
-    return null;
+    return await this.associationModel.findOne({
+      associationId: associationId,
+    });
   }
+  public async getCountries(): Promise<Country[]> {
+    return await this.countryModel.find({});
+  }
+  T;
   public async getAssociationSettingsModels(
     associationId: string,
   ): Promise<SettingsModel[]> {

@@ -6,8 +6,8 @@ import { Position } from './position';
 })
 export class Association {
   _partitionKey: string;
-
   _id: string;
+
   @Prop()
   associationId: string;
   @Prop()

@@ -45,7 +45,7 @@ export abstract class MyUtils {
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir, { recursive: true });
       }
-      let version = 10;
+      let version = 15;
       if (size == 1) {
         version = 20;
       }

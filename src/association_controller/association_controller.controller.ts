@@ -23,6 +23,7 @@ import * as path from 'path';
 import * as mime from 'mime';
 import { Vehicle } from 'src/data/models/Vehicle';
 import { MyUtils } from 'src/my-utils/my-utils';
+import { Country } from 'src/data/models/Country';
 const mm = '🍐🍐🍐 AssociationController';
 
 @Controller('api/v1')
@@ -32,6 +33,10 @@ export class AssociationController {
     private readonly fbService: MyFirebaseService,
   ) {}
 
+  @Get('getCountries')
+  async getCountries(): Promise<Country[]> {
+    return await this.associationService.getCountries();
+  }
   @Get('getAssociations')
   async getAssociations(): Promise<Association[]> {
     return await this.associationService.getAssociations();

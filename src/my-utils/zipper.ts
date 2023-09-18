@@ -13,12 +13,16 @@ export class FileArchiverService {
     const zipFileName = `file${key}.zip`;
     const zipFilePath = path.join(__dirname, '..', 'tempFiles', zipFileName);
 
+    Logger.log(`${mm} input content: ${fileContents[0].content.length} bytes`);
     return new Promise<string>((resolve, reject) => {
       const output = fs.createWriteStream(zipFilePath);
       const archive = archiver('zip', { zlib: { level: 9 } });
 
+      output.on('data', (chunk) => {
+        Logger.log(`${mm} ... on data: chunk length: ${chunk.length} bytes`);
+      });
       output.on('close', () => {
-        Logger.log(`${mm} ... onClose`);
+        Logger.log(`${mm} ... onClose .. resolved the Promise`);
         resolve(zipFilePath);
       });
 
@@ -32,7 +36,7 @@ export class FileArchiverService {
       for (const file of fileContents) {
         archive.append(file.content, { name: zipFileName });
       }
-      Logger.log(`${mm} ... finalize archive`);
+      Logger.log(`${mm} ... finalize archive: files zipped`);
 
       archive.finalize();
     });
