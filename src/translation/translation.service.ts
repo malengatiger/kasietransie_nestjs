@@ -7,6 +7,7 @@ import { Readable } from 'stream';
 import * as performance from 'perf_hooks';
 import * as fs from 'fs';
 import * as csvParser from 'csv-parser';
+import * as path from 'path';
 import mongoose from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 const mm = '🍐🍐🍐🍐 TranslationService 🍐';
@@ -79,13 +80,49 @@ export class TranslationService {
     Logger.log(
       `${mm} Translation completed successfully for 🍎 ${translationBags.length} total translations`,
     );
+    const tempDir = path.join(__dirname, '..', 'translations');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+    //write to db
     await this.translationModel.create(translationBags);
-    Logger.log(`${mm} TranslationBags written to Mongo`);
+    Logger.log(`${mm} TranslationBags written to Mongo 🍎 🍎 🍎 `);
 
+    //151500
+    const mergedList = await this.translationModel.find({}).sort({ target: 1 });
+    languageCodes.sort();
+    languageCodes.forEach(async (languageCode) => {
+      const filteredBags = mergedList.filter(
+        (bag) => bag.target === languageCode,
+      );
+      Logger.log(
+        `${mm} ... filteredBags: ${filteredBags.length} for languageCode: ${languageCode}`,
+      );
+      const filePath = path.join(tempDir, `${languageCode}.json`);
+      this.handleLanguageBags(filteredBags, filePath);
+    });
+    await this.createKeysFile(mergedList);
     const endTime = performance.performance.now();
     const elapsedTime = (endTime - startTime) / 1000; // Convert to seconds
-    Logger.log(`${mm} Translation elapsed time: 🍎 ${elapsedTime} seconds`);
+    Logger.log(`${mm} Translation elapsed time: 🍎 ${elapsedTime} seconds 🍎 `);
     return translationBags;
+  }
+  private handleLanguageBags(filteredBags: TranslationBag[], path: any) {
+    const lines: string[] = [];
+    const top = `'map': {\n`;
+    const bottom = `}\n`;
+
+    lines.push(top);
+    filteredBags.forEach((bag) => {
+      lines.push(`'${bag.key}': '${bag.translatedText}',\n`);
+    });
+    lines.push(bottom);
+
+    const jsonData = lines.join('');
+    Logger.log(
+      `${mm} handleLanguageBags: keys length: ${jsonData.length} bytes, writing to file 🖐🏽 ${path}`,
+    );
+    fs.writeFileSync(path, jsonData);
   }
   async convertCsvToJson(csvContent: string): Promise<any[]> {
     const jsonArray: any[] = [];
@@ -114,6 +151,36 @@ export class TranslationService {
       });
     });
   }
+  async createKeysFile(translationBags: TranslationBag[]): Promise<void> {
+    Logger.log(
+      `${mm} createKeysFile: translationBags found:  😎 ${translationBags.length}`,
+    );
+    const fileName = `keys_${new Date().getTime()}.txt`;
+    const tempDir = path.join(__dirname, '..', 'tempFiles');
+    const tempFilePath = path.join(tempDir, fileName);
+
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+
+    const map = new Map<string, TranslationBag>();
+    translationBags.forEach((bag) => {
+      map.set(bag.key, bag);
+    });
+
+    let lines = '';
+    Array.from(map.values()).map((bag) => {
+      const escapedValue = bag.key.replace(/'/g, "\\'");
+      const line = `    hashMap['${bag.key}'] = '${escapedValue}';\n`;
+      lines += line;
+    });
+
+    Logger.log(`${mm} lines:  😎 😎 😎 ${lines}`);
+    fs.writeFileSync(tempFilePath, lines);
+    Logger.log(
+      `${mm} createKeysFile: translationKeyFile written:  😎 ${fileName}`,
+    );
+  }
   private getLanguageCodes(): string[] {
     const languageCodes = [];
 
@@ -139,6 +206,7 @@ export class TranslationService {
     languageCodes.push('xh');
 
     languageCodes.push('zh');
+
     return languageCodes;
   }
 }
