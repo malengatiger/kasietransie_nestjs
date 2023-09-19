@@ -65,6 +65,24 @@ import {
   VehicleHeartbeat,
   VehicleHeartbeatSchema,
 } from './data/models/VehicleHeartbeat';
+import { RouteController } from './controllers/route_controller';
+import { RouteService } from './services/RouteService';
+import { UserService } from './services/UserService';
+import {
+  RouteUpdateRequest,
+  RouteUpdateRequestSchema,
+} from './data/models/RouteUpdateRequest';
+import {
+  VehicleMediaRequest,
+  VehicleMediaRequestSchema,
+} from './data/models/VehicleMediaRequest';
+import { RouteCity, RouteCitySchema } from './data/models/RouteCity';
+import {
+  CalculatedDistance,
+  CalculatedDistanceSchema,
+} from './data/models/CalculatedDistance';
+import { CarController } from './controllers/car_controller';
+import { VehicleService } from './services/VehicleService';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -86,7 +104,9 @@ import {
       { name: ExampleFile.name, schema: ExampleFileSchema },
     ]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+
     MongooseModule.forFeature([{ name: Vehicle.name, schema: VehicleSchema }]),
+
     MongooseModule.forFeature([
       { name: RouteLandmark.name, schema: RouteLandmarkSchema },
     ]),
@@ -113,10 +133,22 @@ import {
       { name: RoutePoint.name, schema: RoutePointSchema },
     ]),
     MongooseModule.forFeature([
+      { name: RouteCity.name, schema: RouteCitySchema },
+    ]),
+    MongooseModule.forFeature([
+      { name: CalculatedDistance.name, schema: CalculatedDistanceSchema },
+    ]),
+    MongooseModule.forFeature([
       { name: VehicleHeartbeat.name, schema: VehicleHeartbeatSchema },
     ]),
     MongooseModule.forFeature([
       { name: TranslationBag.name, schema: TranslationBagSchema },
+    ]),
+    MongooseModule.forFeature([
+      { name: RouteUpdateRequest.name, schema: RouteUpdateRequestSchema },
+    ]),
+    MongooseModule.forFeature([
+      { name: VehicleMediaRequest.name, schema: VehicleMediaRequestSchema },
     ]),
   ],
 
@@ -127,6 +159,8 @@ import {
     TranslationController,
     UserController,
     HeartbeatController,
+    RouteController,
+    CarController,
   ],
   providers: [
     AppService,
@@ -139,6 +173,9 @@ import {
     TranslationService,
     DataApiService,
     HeartbeatService,
+    RouteService,
+    UserService,
+    VehicleService,
   ],
 })
 export class AppModule {}

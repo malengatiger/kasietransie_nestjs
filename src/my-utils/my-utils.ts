@@ -1,9 +1,18 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Logger } from '@nestjs/common';
 import * as qrcode from 'qrcode';
 import admin from 'firebase-admin';
 import * as fs from 'fs';
 import * as path from 'path';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Res,
+} from '@nestjs/common';
 const mm = '🥦 🥦 🥦 🥦 MyUtils 🥦🥦';
 
 export abstract class MyUtils {
@@ -42,6 +51,7 @@ export abstract class MyUtils {
     const isoString = date.toISOString();
     return isoString;
   }
+
   public static async createQRCodeAndUploadToCloudStorage(
     input: string,
     prefix: string,

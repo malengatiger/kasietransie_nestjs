@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import paginate from 'mongoose-paginate-v2';
+
 @Schema({
   timestamps: true,
   collection: 'Vehicle',

@@ -12,13 +12,16 @@ import { CalculatedDistanceList } from 'src/data/helpers/CalculatedDistanceList'
 import { RouteBag } from 'src/data/helpers/RouteBag';
 import { CalculatedDistance } from 'src/data/models/CalculatedDistance';
 import { RoutePoint } from 'src/data/models/RoutePoint';
+import { MyUtils } from 'src/my-utils/my-utils';
+import { FileArchiverService } from 'src/my-utils/zipper';
 
 const mm = 'RouteService';
 
 @Injectable()
 export class RouteService {
   constructor(
-    private configService: ConfigService,
+    // private configService: ConfigService,
+    private archiveService: FileArchiverService,
 
     @InjectModel(RouteUpdateRequest.name)
     private routeUpdateRequestModel: mongoose.Model<RouteUpdateRequest>,
@@ -31,6 +34,12 @@ export class RouteService {
 
     @InjectModel(RouteCity.name)
     private routeCityModel: mongoose.Model<RouteCity>,
+
+    @InjectModel(RoutePoint.name)
+    private routePointModel: mongoose.Model<RoutePoint>,
+
+    @InjectModel(CalculatedDistance.name)
+    private calculatedDistanceModel: mongoose.Model<CalculatedDistance>,
 
     @InjectModel(Route.name)
     private routeModel: mongoose.Model<Route>,
@@ -62,23 +71,39 @@ export class RouteService {
   public async getAssociationRouteLandmarks(
     associationId: string,
   ): Promise<RouteLandmark[]> {
-    return [];
+    const routeLandmarks = await this.routeLandmarkModel.find({
+      associationId: associationId,
+    });
+    return routeLandmarks;
   }
-  public async getAssociationRouteZippedFile(
-    associationId: string,
-  ): Promise<File> {
-    return null;
-  }
+  // public async getAssociationRouteZippedFile(
+  //   associationId: string,
+  // ): Promise<File> {
+  //   return null;
+  // }
   public async addRoute(route: Route): Promise<Route> {
-    return null;
+    const url = await MyUtils.createQRCodeAndUploadToCloudStorage(
+      JSON.stringify(route),
+      'route',
+      3,
+    );
+    route.qrCodeUrl = url;
+    return await this.routeModel.create(route);
   }
-  public async createRouteQRCode(route: Route): Promise<void> {
-    return null;
+  public async createRouteQRCode(route: Route): Promise<Route> {
+    const url = await MyUtils.createQRCodeAndUploadToCloudStorage(
+      JSON.stringify(route),
+      'route',
+      3,
+    );
+    route.qrCodeUrl = url;
+    await this.routeModel.updateOne(route);
+    return route;
   }
   public async getCalculatedDistances(
     routeId: string,
   ): Promise<CalculatedDistance[]> {
-    return [];
+    return await this.calculatedDistanceModel.find({ routeId: routeId });
   }
   public async getRouteUpdateRequests(
     routeId: string,
@@ -88,57 +113,65 @@ export class RouteService {
   public async refreshRoute(routeId: string): Promise<RouteBag> {
     return null;
   }
-  public async deleteRoutePoint(routePointId: string): Promise<number> {
-    return null;
-  }
   public async updateRouteColor(
     routeId: string,
     color: string,
   ): Promise<Route> {
-    return null;
+    const r = await this.routeModel.findOne({ routeId: routeId });
+    r.color = color;
+    await this.routeModel.create(r);
+    return r;
   }
   public async addRoutePoints(routePoints: RoutePoint[]): Promise<number> {
-    return null;
+    const m = await this.routePointModel.create(routePoints);
+    return m.length;
   }
   public async deleteRoutePointsFromIndex(
     routeId: string,
     index: number,
   ): Promise<RoutePoint[]> {
-    return [];
+    const list = await this.routePointModel.deleteMany({
+      routeId: routeId,
+      index: { $gte: index },
+    });
+    Logger.log(`deleteRoutePoints deleted: ${list.deletedCount}`);
+    return await this.routePointModel
+      .find({ routeId: routeId })
+      .sort({ index: 1 });
   }
   public async addCalculatedDistances(
     list: CalculatedDistanceList,
   ): Promise<CalculatedDistance[]> {
-    return [];
+    return await this.calculatedDistanceModel.create(list.calculatedDistances);
   }
   public async addRouteLandmark(
     routeLandmark: RouteLandmark,
   ): Promise<RouteLandmark> {
-    return null;
+    return await this.routeLandmarkModel.create(routeLandmark);
   }
   public async addVehicleMediaRequest(
     vehicleMediaRequest: VehicleMediaRequest,
   ): Promise<VehicleMediaRequest> {
-    return null;
+    return await this.vehicleMediaRequestModel.create(vehicleMediaRequest);
   }
   public async addRouteUpdateRequest(
     routeUpdateRequest: RouteUpdateRequest,
   ): Promise<RouteUpdateRequest> {
-    return null;
+    return await this.routeUpdateRequestModel.create(routeUpdateRequest);
   }
   public async updateRouteLandmark(
     routeLandmark: RouteLandmark,
   ): Promise<RouteLandmark> {
-    return null;
+    return await this.routeLandmarkModel.create(routeLandmark);
   }
   public async addRouteCity(routeCity: RouteCity): Promise<RouteCity> {
-    return null;
+    return await this.routeCityModel.create(routeCity);
   }
   public async getRouteCities(routeId: string): Promise<RouteCity[]> {
-    return [];
+    return await this.routeCityModel.find({ routeId: routeId });
   }
   public async getRouteLandmarks(routeId: string): Promise<RouteLandmark[]> {
-    return [];
+    return await this.routeLandmarkModel.find({ routeId: routeId });
   }
   public async findRoutesByLocation(
     latitude: number,
@@ -156,8 +189,16 @@ export class RouteService {
   }
   public async getAssociationRoutePoints(
     associationId: string,
-  ): Promise<RoutePoint[]> {
-    return [];
+  ): Promise<string> {
+    const routePoints = await this.routePointModel.find({
+      associationId: associationId,
+    });
+    const fileName = this.archiveService.zip([
+      {
+        content: JSON.stringify(routePoints),
+      },
+    ]);
+    return fileName;
   }
   public async getAssociationRouteCities(
     associationId: string,
@@ -169,13 +210,21 @@ export class RouteService {
   ): Promise<RouteLandmark[]> {
     return [];
   }
+
   public async getAssociationRoutes(associationId: string): Promise<Route[]> {
-    return [];
+    return await this.routeModel.find({ associationId: associationId });
   }
   public async getRoutePoints(
     routeId: string,
     page: number,
   ): Promise<RoutePoint[]> {
     return [];
+  }
+
+  public async getRoutePointsZipped(routeId: string): Promise<string> {
+    const points = await this.routePointModel.find({ routeId: routeId });
+    const json = JSON.stringify(points);
+    const filePath = this.archiveService.zip([{ content: json }]);
+    return filePath;
   }
 }

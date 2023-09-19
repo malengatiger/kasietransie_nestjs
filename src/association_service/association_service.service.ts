@@ -16,6 +16,7 @@ import admin from 'firebase-admin';
 import { Vehicle } from 'src/data/models/Vehicle';
 import { FileArchiverService } from 'src/my-utils/zipper';
 import { Country } from 'src/data/models/Country';
+import { UserService } from 'src/services/UserService';
 
 const mm = '🍎🍎🍎 AssociationService: 🍎🍎🍎';
 @Injectable()
@@ -23,6 +24,7 @@ export class AssociationService {
   constructor(
     private configService: ConfigService,
     private archiveService: FileArchiverService,
+    private userService: UserService,
     //
     @InjectModel(User.name)
     private userModel: mongoose.Model<User>,
@@ -177,12 +179,50 @@ export class AssociationService {
     association: Association,
   ): Promise<RegistrationBag> {
     Logger.log(`${mm} registerAssociation ...`);
+    const u = new User();
+    u.firstName = association.adminUserFirstName;
+    u.lastName = association.adminUserLastName;
+    u.email = association.adminEmail;
+    u.cellphone = association.adminCellphone;
+    u.countryId = association.countryId;
+    u.countryName = association.countryName;
+    u.dateRegistered = Date.now().toString();
 
-    return null;
+    const user = await this.userService.createUser(u);
+    association.userId = user.userId;
+    const ass = await this.associationModel.create(association);
+    const s = new SettingsModel();
+    s.created = Date.now().toString();
+    s.associationId = ass.associationId;
+    s.commuterGeoQueryRadius = 50;
+    s.commuterGeofenceRadius = 200;
+    s.commuterSearchMinutes = 30;
+    s.distanceFilter = 25;
+    s.geofenceRadius = 200;
+    s.heartbeatIntervalSeconds = 600;
+    s.locale = 'en';
+    s.loiteringDelay = 60;
+    s.refreshRateInSeconds = 600;
+    s.themeIndex = 0;
+    s.vehicleGeoQueryRadius = 100;
+    s.vehicleSearchMinutes = 30;
+    const settings = await this.settingsModel.create(s);
+    const bag = new RegistrationBag();
+    bag.association = ass;
+    bag.settings = settings;
+    bag.user = user;
+    if (ass.countryId) {
+      const c = await this.countryModel.find({ countryId: ass.countryId });
+      if (c.length > 0) {
+        bag.country = c[0];
+      }
+    }
+
+    Logger.log(`association registered: ${ass.associationName}`);
+    return bag;
   }
   public async addSettingsModel(model: SettingsModel): Promise<SettingsModel> {
     Logger.log(`adding addSettingsModel${model}`);
-
     return await this.settingsModel.create(model);
   }
   public async addAppError(error: AppError): Promise<AppError> {
@@ -190,7 +230,7 @@ export class AssociationService {
     return await this.appErrorModel.create(error);
   }
   public async addAppErrors(errors: AppErrors): Promise<AppError[]> {
-    return [];
+    return await this.appErrorModel.create(errors.appErrorList);
   }
   public async getAssociationAppErrors(
     associationId: string,
@@ -209,7 +249,7 @@ export class AssociationService {
     return null;
   }
   public async getExampleFiles(): Promise<ExampleFile[]> {
-    return [];
+    return this.exampleFileModel.find({});
   }
   public async upLoadExampleFiles(files: File[]): Promise<ExampleFile[]> {
     return [];

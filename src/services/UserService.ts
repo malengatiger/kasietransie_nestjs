@@ -1,27 +1,26 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { User } from 'src/data/models/User';
 import * as fs from 'fs';
-import { Express } from 'express';
 import * as admin from 'firebase-admin';
 import qrcode from 'qrcode';
 import { Storage } from '@google-cloud/storage';
 import { MyUtils } from 'src/my-utils/my-utils';
+import csvParser from 'csv-parser';
+import { randomUUID } from 'crypto';
+import { Association } from 'src/data/models/Association';
 
 const mm = 'UserService';
 
 @Injectable()
 export class UserService {
   constructor(
-    private configService: ConfigService,
     @InjectModel(User.name)
     private userModel: mongoose.Model<User>,
-
-    @InjectModel(File.name)
-    private fileModel: mongoose.Model<File>,
+    @InjectModel(Association.name)
+    private associationModel: mongoose.Model<Association>,
   ) {}
   public convertExpressFileToString(expressFile: Express.Multer.File): string {
     const buffer = fs.readFileSync(expressFile.path);
@@ -59,13 +58,13 @@ export class UserService {
       if (userRecord.uid) {
         const uid = userRecord.uid;
         user.userId = uid;
-        MyUtils.createQRCodeAndUploadToCloudStorage(
+        const url = await MyUtils.createQRCodeAndUploadToCloudStorage(
           JSON.stringify(user),
-          `${user.firstName} ${user.lastName}`,
+          `${user.firstName}_${user.lastName}`.replace(' ', ''),
           1,
         );
         user.password = null;
-
+        user.qrCodeUrl = url;
         const mUser = await this.userModel.create(user);
         //
         mUser.password = storedPassword;
@@ -97,36 +96,7 @@ export class UserService {
 
     return user;
   }
-  async createQRCodeAndUploadToCloudStorage(input: string): Promise<string> {
-    try {
-      // Create QR code image as a data URL
-      const qrCodeDataURL = await qrcode.toDataURL(input);
 
-      // Upload QR code image to Google Cloud Storage
-      const storage = new Storage();
-      const bucketName = 'your-bucket-name';
-      const fileName = 'qr-code.png';
-      const fileBuffer = Buffer.from(
-        qrCodeDataURL.replace(/^data:image\/\w+;base64,/, ''),
-        'base64',
-      );
-      await storage.bucket(bucketName).file(fileName).save(fileBuffer, {
-        contentType: 'image/png',
-      });
-
-      // Get the download URL of the uploaded file
-      const file = storage.bucket(bucketName).file(fileName);
-      const [url] = await file.getSignedUrl({
-        action: 'read',
-        expires: Date.now() + 24 * 60 * 60 * 1000, // URL expires in 24 hours
-      });
-
-      return url;
-    } catch (error) {
-      console.error(error);
-      throw new Error('Failed to create QR code and upload to Cloud Storage.');
-    }
-  }
   public async updateUser(user: User): Promise<User> {
     return null;
   }
@@ -137,22 +107,88 @@ export class UserService {
     file: Express.Multer.File,
     associationId: string,
   ): Promise<User[]> {
-    const jsonString = this.convertExpressFileToString(file);
+    const ass = await this.associationModel.findOne({
+      associationId: associationId,
+    });
+    const users: User[] = [];
+
     try {
-      const jsonObject = JSON.parse(jsonString);
-      console.log(jsonObject);
+      // Parse the JSON file and create User objects
+      // Replace this logic with your own JSON parsing implementation
+      const jsonData = fs.readFileSync(file.path, 'utf-8');
+      const jsonUsers = JSON.parse(jsonData);
+
+      jsonUsers.forEach(async (data: any) => {
+        const user: User = await this.buildUser(data, ass);
+        users.push(user);
+      });
+
+      const mUsers: User[] = [];
+      // Save the parsed users to the database
+      users.forEach(async (user) => {
+        const u = await this.createUser(user);
+        mUsers.push(u);
+      });
+
+      await this.userModel.create(mUsers);
+      Logger.log(`${mUsers.length} users added`);
     } catch (error) {
       console.error('Failed to parse JSON string:', error);
     }
-    return [];
+    return users;
   }
   public async importUsersFromCSV(
     file: Express.Multer.File,
     associationId: string,
   ): Promise<User[]> {
-    const stringContent = this.convertExpressFileToString(file);
-    return [];
+    // const stringContent = this.convertExpressFileToString(file);
+    const ass = await this.associationModel.findOne({
+      associationId: associationId,
+    });
+    const users: User[] = [];
+    const mUsers: User[] = [];
+    fs.createReadStream(file.path)
+      .pipe(csvParser())
+      .on('data', async (data: any) => {
+        const user: User = await this.buildUser(data, ass);
+        users.push(user);
+      })
+      .on('end', () => {
+        // Save the parsed users to the database
+        users.forEach(async (user) => {
+          const u = await this.createUser(user);
+          mUsers.push(u);
+        });
+      });
+
+    Logger.log(`${mUsers.length} users added`);
+    return mUsers;
   }
+  private async buildUser(data: any, ass: Association): Promise<User> {
+    const u = {
+      userType: data.userType,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      cellphone: data.cellphone,
+      userId: null,
+      gender: null,
+      countryId: ass.countryId,
+      associationId: ass.associationId,
+      associationName: ass.associationName,
+      fcmToken: '',
+      password: randomUUID.toString(),
+      countryName: ass.countryName,
+      dateRegistered: '',
+      qrCodeUrl: null,
+      profileUrl: null,
+      profileThumbnail: null,
+      _partitionKey: null,
+      _id: null,
+    };
+    return u;
+  }
+
   public async getUserById(userId: string): Promise<User> {
     const user = await this.userModel.findOne({ userId: userId });
     return user;

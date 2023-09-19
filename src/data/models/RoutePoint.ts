@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Position } from './position';
+
 @Schema({
   timestamps: true,
   collection: 'RoutePoint',

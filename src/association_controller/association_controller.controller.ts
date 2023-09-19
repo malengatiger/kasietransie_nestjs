@@ -195,7 +195,7 @@ export class AssociationController {
   public async registerAssociation(
     @Body() association: Association,
   ): Promise<RegistrationBag> {
-    return null;
+    return await this.associationService.registerAssociation(association);
   }
   @Post('translateStrings')
   public async translateStrings(
@@ -212,17 +212,13 @@ export class AssociationController {
   @Post('addAppError')
   public async addAppError(@Body() error: AppError): Promise<AppError> {
     Logger.log(`${mm} .. adding AppError: ${error}`);
-    return this.associationService.addAppError(error);
+    return await this.associationService.addAppError(error);
   }
   @Post('addAppErrors')
   public async addAppErrors(@Body() errorList: AppErrors): Promise<AppError[]> {
-    return [];
+    return await this.associationService.addAppErrors(errorList);
   }
 
-  @Get('downloadExampleUsersFile')
-  public async downloadExampleUsersFile(): Promise<File> {
-    return null;
-  }
   public async generateFakeAssociation(
     associationName: string,
     email: string,
@@ -237,13 +233,5 @@ export class AssociationController {
       firstName,
       lastName,
     );
-  }
-  @Get('getExampleFiles')
-  public async getExampleFiles(): Promise<ExampleFile[]> {
-    return [];
-  }
-  @Post('upLoadExampleFiles')
-  public async upLoadExampleFiles(files: File[]): Promise<ExampleFile[]> {
-    return [];
   }
 }
