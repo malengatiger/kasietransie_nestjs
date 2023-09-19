@@ -36,6 +36,12 @@ export abstract class MyUtils {
     }
     return port;
   }
+  public static getStartDate(numberOfHours: number): string {
+    const date = new Date();
+    date.setHours(date.getHours() - numberOfHours);
+    const isoString = date.toISOString();
+    return isoString;
+  }
   public static async createQRCodeAndUploadToCloudStorage(
     input: string,
     prefix: string,

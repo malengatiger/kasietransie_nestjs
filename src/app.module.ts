@@ -58,6 +58,13 @@ import {
   TranslationBagSchema,
 } from './data/models/TranslationBag';
 import { Country, CountrySchema } from 'src/data/models/Country';
+import { DataApiService } from './data-api/data-api.service';
+import { HeartbeatService } from './services/HeartbeatService';
+import { HeartbeatController } from './heartbeat/heartbeat.controller';
+import {
+  VehicleHeartbeat,
+  VehicleHeartbeatSchema,
+} from './data/models/VehicleHeartbeat';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -106,15 +113,20 @@ import { Country, CountrySchema } from 'src/data/models/Country';
       { name: RoutePoint.name, schema: RoutePointSchema },
     ]),
     MongooseModule.forFeature([
+      { name: VehicleHeartbeat.name, schema: VehicleHeartbeatSchema },
+    ]),
+    MongooseModule.forFeature([
       { name: TranslationBag.name, schema: TranslationBagSchema },
     ]),
   ],
+
   controllers: [
     AppController,
     AssociationController,
     DispatchController,
     TranslationController,
     UserController,
+    HeartbeatController,
   ],
   providers: [
     AppService,
@@ -125,6 +137,8 @@ import { Country, CountrySchema } from 'src/data/models/Country';
     MessagingService,
     DispatchService,
     TranslationService,
+    DataApiService,
+    HeartbeatService,
   ],
 })
 export class AppModule {}

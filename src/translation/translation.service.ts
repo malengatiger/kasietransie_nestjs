@@ -207,6 +207,7 @@ export class TranslationService {
 
     languageCodes.push('zh');
 
+    languageCodes.sort();
     return languageCodes;
   }
 }

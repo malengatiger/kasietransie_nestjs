@@ -20,6 +20,7 @@ lerna-debug.log*
 ./temp/
 ./tempFiles/
 
+
 # IDEs and editors
 /.idea
 .project

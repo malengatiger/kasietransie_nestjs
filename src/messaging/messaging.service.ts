@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { VehicleArrival } from 'src/data/models/VehicleArrival';
 import * as admin from 'firebase-admin';
 import { DispatchRecord } from 'src/data/models/DispatchRecord';
+import { VehicleHeartbeat } from 'src/data/models/VehicleHeartbeat';
 const mm = '🎽 🎽 🎽 MessagingService';
 @Injectable()
 export class MessagingService {
@@ -23,6 +24,16 @@ export class MessagingService {
       `Dispatched at ${dispatch.created}`,
       'dispatchRecord',
       JSON.stringify(dispatch),
+    );
+    return null;
+  }
+  async sendHeartbeatMessage(heartbeat: VehicleHeartbeat) {
+    this.send(
+      `heartbeat${heartbeat.associationId}`,
+      `${heartbeat.vehicleReg},`,
+      `Heartbeat at ${heartbeat.created}`,
+      'vehicleHeartbeat',
+      JSON.stringify(heartbeat),
     );
     return null;
   }

@@ -24,4 +24,4 @@ gcloud run deploy $SERVICE_NAME \
   --region $REGION \
   --allow-unauthenticated
 
-echo "🍎 🍎 🍎 🍎 🍎 🍎 🍎 🍎 🍎 Hopefully, we have deployed successfully\n"
+echo "🍎 🍎 🍎 🍎 🍎 🍎 🍎 🍎 🍎 Hopefully, we have deployed successfully"
