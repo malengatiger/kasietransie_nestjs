@@ -2,43 +2,43 @@
   {
     "userType": "ASSOCIATION_OFFICIAL",
     "firstName": "Frankie G",
-    "lastName": "Fredericks",
-    "email": "frankie@thebiggest.com",
-    "cellphone": "+279095550008"
+    "lastName": "Jones",
+    "email": "frankie@awesome.com",
+    "cellphone": "+279085550008"
   },
   {
     "userType": "MARSHAL",
     "firstName": "David",
-    "lastName": "van der Merwe",
-    "email": "david@thebiggest.com",
-    "cellphone": "+19095550007"
+    "lastName": "Smith",
+    "email": "david@awesome.com",
+    "cellphone": "+19085550007"
   },
   {
     "userType": "OWNER",
     "firstName": "Thomas",
-    "lastName": "Black",
-    "email": "thomas@thebiggest.com",
-    "cellphone": "+279095550006"
+    "lastName": "Smith",
+    "email": "thomas@awesome.com",
+    "cellphone": "+279085550006"
   },
   {
     "userType": "DRIVER",
     "firstName": "Frank",
-    "lastName": "Gumball",
-    "email": "franke@thebiggest.com",
-    "cellphone": "+279095550005"
+    "lastName": "Baker",
+    "email": "franke@awesome.com",
+    "cellphone": "+279085550005"
   },
   {
     "userType": "AMBASSADOR",
     "firstName": "Nancy",
-    "lastName": "Rouseberg",
-    "email": "nancy@thebiggest.com",
-    "cellphone": "+279095550004"
+    "lastName": "deBeg",
+    "email": "nancy@awesome.com",
+    "cellphone": "+279085550004"
   },
   {
     "userType": "ROUTE_BUILDER",
-    "firstName": "Fatima",
+    "firstName": "Ron",
     "lastName": "Jackson",
-    "email": "fatima@thebiggest.com",
-    "cellphone": "+279095550003"
+    "email": "fatima@awesome.com",
+    "cellphone": "+279085550003"
   }
 ]

@@ -11,22 +11,19 @@ import {
 import { AssociationService } from 'src/association_service/association_service.service';
 import { AppErrors } from 'src/data/helpers/AppErrors';
 import { Association } from 'src/data/models/Association';
-import { ExampleFile } from 'src/data/models/ExampleFile';
 import { RegistrationBag } from 'src/data/models/RegistrationBag';
 import { SettingsModel } from 'src/data/models/SettingsModel';
 import { User } from 'src/data/models/User';
 import { AppError } from 'src/data/models/AppError';
-import { MyFirebaseService } from 'src/services/FirebaseService';
 import { Response } from 'express';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as mime from 'mime';
 import { Vehicle } from 'src/data/models/Vehicle';
 import { MyUtils } from 'src/my-utils/my-utils';
 import { Country } from 'src/data/models/Country';
 import { TranslationInput } from 'src/data/helpers/TranslationInput';
 import { TranslationBag } from 'src/data/models/TranslationBag';
 import { TranslationService } from 'src/translation/translation.service';
+import { UserGeofenceEvent } from 'src/data/models/UserGeofenceEvent';
+import { UserService } from 'src/services/UserService';
 const mm = '🍐🍐🍐 AssociationController';
 
 @Controller('api/v1')
@@ -34,6 +31,7 @@ export class AssociationController {
   constructor(
     private readonly associationService: AssociationService,
     private readonly txService: TranslationService,
+    private readonly userService: UserService,
   ) {}
 
   @Get('getCountries')
@@ -196,6 +194,12 @@ export class AssociationController {
     @Body() association: Association,
   ): Promise<RegistrationBag> {
     return await this.associationService.registerAssociation(association);
+  }
+  @Post('addUserGeofenceEvent')
+  public async addUserGeofenceEvent(
+    @Body() userGeofence: UserGeofenceEvent,
+  ): Promise<UserGeofenceEvent> {
+    return await this.userService.addUserGeofenceEvent(userGeofence);
   }
   @Post('translateStrings')
   public async translateStrings(

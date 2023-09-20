@@ -91,46 +91,7 @@ export class VehicleService {
     vehicle.qrCodeUrl = url;
     return await this.vehicleModel.create(vehicle);
   }
-  public async getCars(
-    list: Vehicle[],
-    numberOfCars: number,
-  ): Promise<Vehicle[]> {
-    return [];
-  }
-  public async getVehicleReg(): Promise<string> {
-    return null;
-  }
-  public async getOwnerName(): Promise<string> {
-    return null;
-  }
-  public async getSortedIndices(points: RoutePoint[]): Promise<number[]> {
-    return [];
-  }
-  public async createVehicleQRCode(car: Vehicle): Promise<number> {
-    return null;
-  }
-  public async processVehiclesFromFile(
-    association: Association,
-    vehiclesFromJSONFile: Vehicle[],
-  ): Promise<[]> {
-    return [];
-  }
-  public async createUserAndVehicles(
-    ass: Association,
-    resultVehicles: Vehicle[],
-    cellphone: string,
-    lastName: string,
-    firstName: string,
-    vehicles: Vehicle[],
-  ): Promise<[]> {
-    return [];
-  }
-  public async getBaseVehicle(
-    associationId: string,
-    associationName: string,
-  ): Promise<Vehicle> {
-    return null;
-  }
+
   public async addRouteAssignments(
     list: RouteAssignmentList,
   ): Promise<RouteAssignment[]> {
@@ -139,12 +100,12 @@ export class VehicleService {
   public async getVehicleRouteAssignments(
     vehicleId: string,
   ): Promise<RouteAssignment[]> {
-    return [];
+    return await this.assignModel.find({ vehicleId: vehicleId });
   }
   public async getRouteAssignments(
     routeId: string,
   ): Promise<RouteAssignment[]> {
-    return [];
+    return await this.assignModel.find({ routeId: routeId });
   }
   public async generateHeartbeats(
     associationId: string,
@@ -161,7 +122,7 @@ export class VehicleService {
     return [];
   }
   public async updateVehicle(vehicle: Vehicle): Promise<Vehicle> {
-    return null;
+    return await this.vehicleModel.create(vehicle);
   }
 
   public async getOwnerVehicles(
@@ -173,11 +134,16 @@ export class VehicleService {
       .sort({ vehicleReg: 1 });
   }
   public async updateVehicleQRCode(vehicle: Vehicle): Promise<number> {
-    return null;
+    const url = await MyUtils.createQRCodeAndUploadToCloudStorage(
+      JSON.stringify(vehicle),
+      vehicle.vehicleReg.replace(' ', ''),
+      2,
+    );
+    vehicle.qrCodeUrl = url;
+    await this.vehicleModel.create(vehicle);
+    return 0;
   }
-  public async recreateAllQRCodes(associationId: string): Promise<number> {
-    return null;
-  }
+
   public async importVehiclesFromJSON(
     file: Express.Multer.File,
     associationId: string,
@@ -266,15 +232,5 @@ export class VehicleService {
     );
     car.qrCodeUrl = url;
     return car;
-  }
-
-  public async generateFakeVehicles(
-    associationId: string,
-    number: number,
-  ): Promise<Vehicle[]> {
-    return [];
-  }
-  public async changeFakeVehicleOwner(userId: string): Promise<number> {
-    return null;
   }
 }

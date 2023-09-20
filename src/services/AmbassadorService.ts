@@ -44,24 +44,33 @@ export class AmbassadorService {
     userId: string,
     startDate: string,
   ): Promise<AmbassadorPassengerCount[]> {
-    return [];
+    return await this.ambassadorPassengerCountModel.findOne({
+      userId: userId,
+      created: { $get: startDate },
+    });
   }
   public async getAssociationAmbassadorPassengerCounts(
     associationId: string,
     startDate: string,
   ): Promise<AmbassadorPassengerCount[]> {
-    return [];
+    return await this.ambassadorPassengerCountModel.findOne({
+      associationId: associationId,
+      created: { $get: startDate },
+    });
   }
   public async getVehicleAmbassadorPassengerCounts(
     vehicleId: string,
     startDate: string,
   ): Promise<AmbassadorPassengerCount[]> {
-    return [];
+    return await this.ambassadorPassengerCountModel.findOne({
+      vehicleId: vehicleId,
+      created: { $get: startDate },
+    });
   }
   public async addAmbassadorPassengerCount(
     count: AmbassadorPassengerCount,
   ): Promise<AmbassadorPassengerCount> {
-    return null;
+    return await this.ambassadorPassengerCountModel.create(count);
   }
   public async generateRoutePassengerCounts(
     routeId: string,
@@ -112,7 +121,10 @@ export class AmbassadorService {
     routeId: string,
     startDate: string,
   ): Promise<AmbassadorPassengerCount[]> {
-    return [];
+    return await this.ambassadorPassengerCountModel.find({
+      routeId: routeId,
+      startDate: { $gte: startDate },
+    });
   }
   public async getCurrentPassengers(
     passengersIn: number,

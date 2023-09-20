@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { CounterBag } from 'src/data/helpers/CounterBag';
 import { DispatchRecord } from 'src/data/models/DispatchRecord';
 import { DispatchService } from 'src/services/DispatchService';
 import { MyFirebaseService } from 'src/services/FirebaseService';
@@ -24,5 +25,11 @@ export class DispatchController {
       query.vehicleId,
       query.startDate,
     );
+  }
+  @Get('getVehicleCounts')
+  async getVehicleCounts(
+    @Query() query: { vehicleId: string },
+  ): Promise<CounterBag[]> {
+    return await this.dispatchService.getVehicleCounts(query.vehicleId);
   }
 }

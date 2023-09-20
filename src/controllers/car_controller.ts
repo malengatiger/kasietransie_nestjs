@@ -16,6 +16,8 @@ import { VehicleService } from 'src/services/VehicleService';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RouteAssignment } from 'src/data/models/RouteAssignment';
 import { RouteAssignmentList } from 'src/data/helpers/RouteAssignmentList';
+import { VehicleArrival } from 'src/data/models/VehicleArrival';
+import { DispatchService } from 'src/services/DispatchService';
 
 const mm = ' 🚼 🚼 🚼 RouteController  🚼';
 
@@ -23,15 +25,24 @@ const mm = ' 🚼 🚼 🚼 RouteController  🚼';
 export class CarController {
   private readonly logger = new Logger(CarController.name);
 
-  constructor(private readonly carService: VehicleService) {}
+  constructor(
+    private readonly carService: VehicleService,
+    private readonly dispatchService: DispatchService,
+  ) {}
 
   @Post('addVehicle')
   async addVehicle(@Body() vehicle: Vehicle): Promise<Vehicle> {
     return await this.carService.addVehicle(vehicle);
   }
-  @Post('importVehiclesFromJSON')
+  @Post('addVehicleArrival')
+  async addVehicleArrival(
+    @Body() vehicle: VehicleArrival,
+  ): Promise<VehicleArrival> {
+    return await this.dispatchService.addVehicleArrival(vehicle);
+  }
+  @Post('importVehiclesFromCSV')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadUsersFromCsv(
+  async importVehiclesFromCSV(
     @UploadedFile() file: Express.Multer.File,
     @Query('associationId') associationId: string,
   ): Promise<Vehicle[]> {
@@ -43,9 +54,9 @@ export class CarController {
     return res;
   }
 
-  @Post('importVehiclesFromCSV')
+  @Post('importVehiclesFromJSON')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadUsersFromJson(
+  async importVehiclesFromJSON(
     @UploadedFile() file: Express.Multer.File,
     @Query('associationId') associationId: string,
   ): Promise<Vehicle[]> {
@@ -66,6 +77,12 @@ export class CarController {
   @Get('getOwnerVehicles')
   async getOwnerVehicles(@Query('userId') userId: string): Promise<Vehicle[]> {
     return await this.carService.getOwnerVehicles(userId, 0);
+  }
+  @Get('getVehicleRouteAssignments')
+  async getVehicleRouteAssignments(
+    @Query('vehicleId') vehicleId: string,
+  ): Promise<RouteAssignment[]> {
+    return await this.carService.getVehicleRouteAssignments(vehicleId);
   }
 
   private sendFile(fileName: string, res: Response) {

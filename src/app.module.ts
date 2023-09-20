@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
@@ -51,7 +51,6 @@ import { RoutePoint, RoutePointSchema } from './data/models/RoutePoint';
 import { DispatchController } from './controllers/dispatch_controller';
 import { TranslationService } from './translation/translation.service';
 import { TranslationController } from './translation/translation.controller';
-import { UserController } from './user/user.controller';
 // import { Country, CountrySchema } from './data/models/Country';
 import {
   TranslationBag,
@@ -83,6 +82,13 @@ import {
 } from './data/models/CalculatedDistance';
 import { CarController } from './controllers/car_controller';
 import { VehicleService } from './services/VehicleService';
+import { UserController } from './controllers/user_controller';
+import {
+  UserGeofenceEvent,
+  UserGeofenceEventSchema,
+} from './data/models/UserGeofenceEvent';
+import { AuthMiddleware } from './middleware/auth.middleware';
+import { ElapsedTimeMiddleware } from './middleware/elapsed.middleware';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -150,6 +156,9 @@ import { VehicleService } from './services/VehicleService';
     MongooseModule.forFeature([
       { name: VehicleMediaRequest.name, schema: VehicleMediaRequestSchema },
     ]),
+    MongooseModule.forFeature([
+      { name: UserGeofenceEvent.name, schema: UserGeofenceEventSchema },
+    ]),
   ],
 
   controllers: [
@@ -178,4 +187,11 @@ import { VehicleService } from './services/VehicleService';
     VehicleService,
   ],
 })
-export class AppModule {}
+//export with middleware
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    Logger.log('Applying AuthMiddleWare configuration');
+    consumer.apply(AuthMiddleware).forRoutes('*');
+    consumer.apply(ElapsedTimeMiddleware).forRoutes('*');
+  }
+}

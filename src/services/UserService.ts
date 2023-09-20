@@ -11,6 +11,7 @@ import { MyUtils } from 'src/my-utils/my-utils';
 import csvParser from 'csv-parser';
 import { randomUUID } from 'crypto';
 import { Association } from 'src/data/models/Association';
+import { UserGeofenceEvent } from 'src/data/models/UserGeofenceEvent';
 
 const mm = 'UserService';
 
@@ -19,6 +20,8 @@ export class UserService {
   constructor(
     @InjectModel(User.name)
     private userModel: mongoose.Model<User>,
+    @InjectModel(UserGeofenceEvent.name)
+    private userGeofenceModel: mongoose.Model<UserGeofenceEvent>,
     @InjectModel(Association.name)
     private associationModel: mongoose.Model<Association>,
   ) {}
@@ -67,23 +70,9 @@ export class UserService {
         user.qrCodeUrl = url;
         const mUser = await this.userModel.create(user);
         //
-        mUser.password = storedPassword;
-        //   // const message = `Dear ${user.getName()},
-        // \n\nYou have been registered with KasieTransie and the team is happy to send you the first time login password.
-        // \nPlease login on the web with your email and the attached password but use your cellphone number to sign in on the phone.
-        // \n\nThank you for working with GeoMonitor.
-        // \nWelcome aboard!!
-        // \nBest Regards,
-        // \nThe KasieTransie Team
-        // \ninfo@geomonitorapp.io\n\n`;
+        user.password = storedPassword;
 
-        //   // console.log('🟢🟢 sending email  .... ');
-        //   // mailService.sendHtmlEmail(
-        //   //   user.getEmail(),
-        //   //   message,
-        //   //   'Welcome to KasieTransie',
-        //   // );
-        console.log('🟢🟢 KasieTransie user created. ');
+        Logger.log('🟢🟢 KasieTransie user created. ');
       } else {
         throw new Error(
           'userRecord.uid == null. We have a problem with Firebase, Jack!',
@@ -98,9 +87,6 @@ export class UserService {
   }
 
   public async updateUser(user: User): Promise<User> {
-    return null;
-  }
-  public async createUserQRCode(user: User): Promise<void> {
     return null;
   }
   public async importUsersFromJSON(
@@ -129,8 +115,6 @@ export class UserService {
         const u = await this.createUser(user);
         mUsers.push(u);
       });
-
-      await this.userModel.create(mUsers);
       Logger.log(`${mUsers.length} users added`);
     } catch (error) {
       console.error('Failed to parse JSON string:', error);
@@ -197,7 +181,10 @@ export class UserService {
     const user = await this.userModel.findOne({ email: email });
     return user;
   }
-  public async getAssociationUsers(associationId: string): Promise<User[]> {
-    return [];
+
+  public async addUserGeofenceEvent(
+    userGeofenceEvent: UserGeofenceEvent,
+  ): Promise<UserGeofenceEvent> {
+    return await this.userGeofenceModel.create(userGeofenceEvent);
   }
 }

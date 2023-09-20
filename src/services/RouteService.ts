@@ -214,11 +214,11 @@ export class RouteService {
   public async getAssociationRoutes(associationId: string): Promise<Route[]> {
     return await this.routeModel.find({ associationId: associationId });
   }
-  public async getRoutePoints(
-    routeId: string,
-    page: number,
-  ): Promise<RoutePoint[]> {
-    return [];
+  public async getRoutePoints(routeId: string): Promise<RoutePoint[]> {
+    const points = await this.routePointModel
+      .find({ routeId: routeId })
+      .sort({ index: 1 });
+    return points;
   }
 
   public async getRoutePointsZipped(routeId: string): Promise<string> {

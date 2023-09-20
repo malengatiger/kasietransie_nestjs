@@ -38,7 +38,7 @@ export class RouteController {
     const list = await this.routeService.getAssociationRoutes(
       query.associationId,
     );
-    this.logger.log(`${mm} routes found: ${list.length}`);
+    this.logger.log(`${mm} associationroutes found: ${list.length}`);
     return list;
   }
   @Get('getAssociationRouteLandmarks')
@@ -62,6 +62,30 @@ export class RouteController {
     } catch (error) {
       this.logger.error('Error getting route zipped file:', error);
       res.status(500).send('Error downloading file: ' + error.message);
+    }
+  }
+  @Get('getRouteLandmarks')
+  public async getRoutePointLandmarks(
+    @Query('routeId') routeId: string,
+  ): Promise<RouteLandmark[]> {
+    try {
+      const list = await this.routeService.getRouteLandmarks(routeId);
+      return list;
+    } catch (error) {
+      this.logger.error('Error getting route landmarks:', error);
+      throw error;
+    }
+  }
+  @Get('getRoutePoints')
+  public async getRoutePoints(
+    @Query('routeId') routeId: string,
+  ): Promise<RoutePoint[]> {
+    try {
+      const list = await this.routeService.getRoutePoints(routeId);
+      return list;
+    } catch (error) {
+      this.logger.error('Error getting route points:', error);
+      throw error;
     }
   }
 

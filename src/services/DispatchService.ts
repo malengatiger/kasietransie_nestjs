@@ -44,6 +44,9 @@ export class DispatchService {
     @InjectModel(VehicleArrival.name)
     private vehicleArrivalModel: mongoose.Model<VehicleArrival>,
 
+    @InjectModel(VehicleHeartbeat.name)
+    private vehicleHeartbeatModel: mongoose.Model<VehicleHeartbeat>,
+
     @InjectModel(AmbassadorPassengerCount.name)
     private ambassadorPassengerCountModel: mongoose.Model<AmbassadorPassengerCount>,
 
@@ -347,7 +350,7 @@ export class DispatchService {
   public async addVehicleArrival(
     vehicleArrival: VehicleArrival,
   ): Promise<VehicleArrival> {
-    return null;
+    return await this.vehicleArrivalModel.create(vehicleArrival);
   }
   public async getRouteDispatchRecords(
     routeId: string,
@@ -364,7 +367,9 @@ export class DispatchService {
   public async addDispatchRecords(
     dispatchRecordList: DispatchRecordList,
   ): Promise<DispatchRecord[]> {
-    return [];
+    return await this.dispatchRecordModel.create(
+      dispatchRecordList.dispatchRecords,
+    );
   }
   public async getLandmarkDispatchRecords(
     landmarkId: string,
@@ -395,7 +400,44 @@ export class DispatchService {
     return [];
   }
   public async getVehicleCounts(vehicleId: string): Promise<CounterBag[]> {
-    return [];
+    const departures = await this.vehicleDepartureModel.find({
+      vehicleId: vehicleId,
+    });
+    const dispatches = await this.dispatchRecordModel.find({
+      vehicleId: vehicleId,
+    });
+    const arrivals = await this.vehicleArrivalModel.find({
+      vehicleId: vehicleId,
+    });
+    const heartbeats = await this.vehicleHeartbeatModel.find({
+      vehicleId: vehicleId,
+    });
+    const passCounts = await this.ambassadorPassengerCountModel.find({
+      vehicleId: vehicleId,
+    });
+    const bags = [];
+    const bag1 = new CounterBag();
+    bag1.count = departures.length;
+    bag1.description = 'VehicleDeparture';
+    bags.push(bag1);
+    const bag2 = new CounterBag();
+    bag2.count = dispatches.length;
+    bag2.description = 'DispatchRecord';
+    bags.push(bag2);
+    const bag3 = new CounterBag();
+    bag3.count = arrivals.length;
+    bag3.description = 'VehicleArrival';
+    bags.push(bag3);
+    const bag4 = new CounterBag();
+    bag4.count = heartbeats.length;
+    bag4.description = 'VehicleHeartbeat';
+    bags.push(bag4);
+    const bag5 = new CounterBag();
+    bag5.count = passCounts.length;
+    bag5.description = 'AmbassadorPassengerCount';
+    bags.push(bag5);
+
+    return bags;
   }
   public async getOwnersBag(
     userId: string,
