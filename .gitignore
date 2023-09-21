@@ -17,8 +17,8 @@ lerna-debug.log*
 # Tests
 /coverage
 /.nyc_output
-./temp/
-./tempFiles/
+./temp/*
+./tempFiles/*
 
 
 # IDEs and editors
