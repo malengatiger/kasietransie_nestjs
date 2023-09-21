@@ -64,6 +64,20 @@ export class RouteController {
       res.status(500).send('Error downloading file: ' + error.message);
     }
   }
+  @Get('getAssociationRouteZippedFile')
+  public async getAssociationRouteZippedFile(
+    @Query('associationId') associationId: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const fileName =
+        await this.routeService.getAssociationRouteZippedFile(associationId);
+      this.sendFile(fileName, res);
+    } catch (error) {
+      this.logger.error('Error getting route zipped file:', error);
+      res.status(500).send('Error downloading file: ' + error.message);
+    }
+  }
   @Get('getRouteLandmarks')
   public async getRoutePointLandmarks(
     @Query('routeId') routeId: string,

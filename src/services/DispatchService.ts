@@ -350,7 +350,9 @@ export class DispatchService {
   public async addVehicleArrival(
     vehicleArrival: VehicleArrival,
   ): Promise<VehicleArrival> {
-    return await this.vehicleArrivalModel.create(vehicleArrival);
+    const m = await this.vehicleArrivalModel.create(vehicleArrival);
+    await this.messagingService.sendVehicleArrivalMessage(vehicleArrival);
+    return m;
   }
   public async getRouteDispatchRecords(
     routeId: string,
@@ -386,7 +388,10 @@ export class DispatchService {
     userId: string,
     startDate: string,
   ): Promise<DispatchRecord[]> {
-    return [];
+    return this.dispatchRecordModel.find({
+      marshalId: userId,
+      startDate: startDate,
+    });
   }
   public async getLandmarkVehicleArrivals(
     landmarkId: string,

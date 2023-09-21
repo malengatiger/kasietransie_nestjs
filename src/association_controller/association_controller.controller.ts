@@ -24,6 +24,8 @@ import { TranslationBag } from 'src/data/models/TranslationBag';
 import { TranslationService } from 'src/translation/translation.service';
 import { UserGeofenceEvent } from 'src/data/models/UserGeofenceEvent';
 import { UserService } from 'src/services/UserService';
+import { VehicleMediaRequest } from 'src/data/models/VehicleMediaRequest';
+import { MediaService } from 'src/services/MediaService';
 const mm = '🍐🍐🍐 AssociationController';
 
 @Controller('api/v1')
@@ -32,6 +34,7 @@ export class AssociationController {
     private readonly associationService: AssociationService,
     private readonly txService: TranslationService,
     private readonly userService: UserService,
+    private readonly mediaService: MediaService,
   ) {}
 
   @Get('getCountries')
@@ -66,6 +69,18 @@ export class AssociationController {
     );
     return await this.associationService.getAssociationVehicles(
       query.associationId,
+    );
+  }
+  @Get('getAssociationVehicleMediaRequests')
+  async getAssociationVehicleMediaRequests(
+    @Query() query: { associationId: string; startDate: string },
+  ): Promise<VehicleMediaRequest[]> {
+    Logger.log(
+      `${mm} ... getAssociationVehicleMediaRequests starting, id: ${query.associationId} ...`,
+    );
+    return await this.mediaService.getAssociationVehicleMediaRequests(
+      query.associationId,
+      query.startDate,
     );
   }
   @Get('getAssociationById')
@@ -113,7 +128,7 @@ export class AssociationController {
   public async downloadExampleVehiclesFile(): Promise<File> {
     return null;
   }
-  @Get('getAssociationVehiclesZippedFile')
+  @Get('getVehiclesZippedFile')
   public async getAssociationVehiclesZippedFile(
     @Query() query: { associationId: string },
     @Res() res: Response,

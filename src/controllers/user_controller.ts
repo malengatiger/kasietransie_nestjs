@@ -26,6 +26,10 @@ export class UserController {
 
   constructor(private readonly userService: UserService) {}
 
+  @Get('getUserById')
+  async getUserById(@Query('userId') userId: string): Promise<User> {
+    return this.userService.getUserById(userId);
+  }
   @Post('importUsersFromCSV')
   @UseInterceptors(FileInterceptor('file'))
   async importUsersFromCSV(

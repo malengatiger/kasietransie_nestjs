@@ -13,7 +13,7 @@ export class MessagingService {
       `${arrival.vehicleReg},`,
       `Arrived at ${arrival.created}`,
       'vehicleArrival',
-      JSON.stringify(arrival),
+      JSON.stringify(arrival, null, 2),
     );
     return null;
   }
@@ -33,7 +33,7 @@ export class MessagingService {
       `${heartbeat.vehicleReg},`,
       `Heartbeat at ${heartbeat.created}`,
       'vehicleHeartbeat',
-      JSON.stringify(heartbeat),
+      JSON.stringify(heartbeat, null, 2),
     );
     return null;
   }

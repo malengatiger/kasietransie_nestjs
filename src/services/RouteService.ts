@@ -200,6 +200,71 @@ export class RouteService {
     ]);
     return fileName;
   }
+  public async getAssociationRouteZippedFile(
+    associationId: string,
+  ): Promise<string> {
+    const routes = await this.routeModel.find({
+      associationId: associationId,
+    });
+    Logger.log(
+      `${mm} getAssociationRouteZippedFile: 🍎🍎 🍎🍎 🍎🍎 routes: ${routes.length} `,
+    );
+
+    const points: any[] = [];
+    const landmarks: any[] = [];
+    const cities: any[] = [];
+
+    await Promise.all(
+      routes.map(async (route) => {
+        // Logger.log(
+        //   `${mm} getAssociationRouteZippedFile: 🍎🍎 🍎🍎 🍎🍎 route: ${route.name} `,
+        // );
+        const list = await this.routePointModel.find({
+          routeId: route.routeId,
+        });
+        points.push(list);
+        Logger.log(
+          `${mm}  \t🍎🍎 route: ${route.name} routePoints: ${list.length} `,
+        );
+
+        const list1 = await this.routeLandmarkModel.find({
+          routeId: route.routeId,
+        });
+        Logger.log(
+          `${mm}  \t🍎🍎 route: ${route.name} routeLandmarks: ${list1.length} `,
+        );
+        landmarks.push(list1);
+
+        const list2 = await this.routeCityModel.find({
+          routeId: route.routeId,
+        });
+        cities.push(list2);
+        Logger.log(
+          `${mm}  \t🍎🍎 route: ${route.name} routeCities: ${list2.length} \n\n`,
+        );
+      }),
+    );
+    //
+    Logger.log(`${mm} data.route:   🔷🔷 ${routes.length} routes`);
+    Logger.log(`${mm} data.marks:   🔷🔷 ${landmarks.length} marks`);
+    Logger.log(`${mm} data.cities:  🔷🔷 ${cities.length} cities`);
+    Logger.log(`${mm} data.points:  🔷🔷 ${points.length} points`);
+
+    const data = {
+      routes: routes,
+      points: points,
+      landmarks: landmarks,
+      cities: cities,
+    };
+    const mString = JSON.stringify(data);
+    Logger.log(`${mm} string to archive: ${mString.length} bytes`);
+    const fileName = this.archiveService.zip([
+      {
+        content: mString,
+      },
+    ]);
+    return fileName;
+  }
   public async getAssociationRouteCities(
     associationId: string,
   ): Promise<RouteCity[]> {

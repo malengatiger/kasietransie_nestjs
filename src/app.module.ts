@@ -89,6 +89,15 @@ import {
 } from './data/models/UserGeofenceEvent';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { ElapsedTimeMiddleware } from './middleware/elapsed.middleware';
+import { AmbassadorService } from './services/AmbassadorService';
+import { AmbassadorController } from './controllers/ambassador_controller';
+import {
+  AmbassadorCheckIn,
+  AmbassadorCheckInSchema,
+} from './data/models/AmbassadorCheckIn';
+import { MediaService } from './services/MediaService';
+import { VehiclePhoto, VehiclePhotoSchema } from './data/models/VehiclePhoto';
+import { VehicleVideo, VehicleVideoSchema } from './data/models/VehicleVideo';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -159,6 +168,30 @@ import { ElapsedTimeMiddleware } from './middleware/elapsed.middleware';
     MongooseModule.forFeature([
       { name: UserGeofenceEvent.name, schema: UserGeofenceEventSchema },
     ]),
+    MongooseModule.forFeature([
+      {
+        name: AmbassadorPassengerCount.name,
+        schema: AmbassadorPassengerCountSchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: AmbassadorCheckIn.name,
+        schema: AmbassadorCheckInSchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: VehiclePhoto.name,
+        schema: VehiclePhotoSchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: VehicleVideo.name,
+        schema: VehicleVideoSchema,
+      },
+    ]),
   ],
 
   controllers: [
@@ -170,6 +203,7 @@ import { ElapsedTimeMiddleware } from './middleware/elapsed.middleware';
     HeartbeatController,
     RouteController,
     CarController,
+    AmbassadorController,
   ],
   providers: [
     AppService,
@@ -184,7 +218,9 @@ import { ElapsedTimeMiddleware } from './middleware/elapsed.middleware';
     HeartbeatService,
     RouteService,
     UserService,
+    AmbassadorService,
     VehicleService,
+    MediaService,
   ],
 })
 //export with middleware

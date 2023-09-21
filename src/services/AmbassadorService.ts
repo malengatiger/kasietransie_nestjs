@@ -44,9 +44,9 @@ export class AmbassadorService {
     userId: string,
     startDate: string,
   ): Promise<AmbassadorPassengerCount[]> {
-    return await this.ambassadorPassengerCountModel.findOne({
+    return await this.ambassadorPassengerCountModel.find({
       userId: userId,
-      created: { $get: startDate },
+      created: { $gte: startDate },
     });
   }
   public async getAssociationAmbassadorPassengerCounts(

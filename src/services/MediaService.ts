@@ -16,6 +16,9 @@ export class MediaService {
     @InjectModel(VehiclePhoto.name)
     private vehiclePhotoModel: mongoose.Model<VehiclePhoto>,
 
+    @InjectModel(VehicleMediaRequest.name)
+    private vehicleMediaRequestModel: mongoose.Model<VehicleMediaRequest>,
+
     @InjectModel(VehicleVideo.name)
     private vehicleVideoModel: mongoose.Model<VehicleVideo>,
   ) {}
@@ -24,7 +27,10 @@ export class MediaService {
     associationId: string,
     startDate: string,
   ): Promise<VehicleMediaRequest[]> {
-    return [];
+    return await this.vehicleMediaRequestModel.find({
+      associationId: associationId,
+      startDate: startDate,
+    });
   }
   public async addVehiclePhoto(
     vehiclePhoto: VehiclePhoto,

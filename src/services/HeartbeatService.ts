@@ -48,7 +48,9 @@ export class HeartbeatService {
   public async addVehicleHeartbeat(
     heartbeat: VehicleHeartbeat,
   ): Promise<VehicleHeartbeat> {
-    return await this.vehicleHeartbeatModel.create(heartbeat);
+    const m = await this.vehicleHeartbeatModel.create(heartbeat);
+    await this.messagingService.sendHeartbeatMessage(heartbeat);
+    return m;
   }
   public async generateRouteHeartbeats(
     request: GenerationRequest,
