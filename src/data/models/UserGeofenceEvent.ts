@@ -5,9 +5,8 @@ import { Position } from './position';
   collection: 'UserGeofenceEvent',
 })
 export class UserGeofenceEvent {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   userGeofenceId: string;

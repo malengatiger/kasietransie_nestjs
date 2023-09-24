@@ -5,14 +5,7 @@ import * as qrcode from 'qrcode';
 import admin from 'firebase-admin';
 import * as fs from 'fs';
 import * as path from 'path';
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Query,
-  Res,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
 const mm = '🥦 🥦 🥦 🥦 MyUtils 🥦🥦';
 
 export abstract class MyUtils {
@@ -101,22 +94,44 @@ export abstract class MyUtils {
       throw new Error('Failed to create QR code and upload to Cloud Storage.');
     }
   }
-}
-/*
-{
-        "_id": "6498aa22171e9639e239df39",
-        "ownerId": "rtGy0aOveOMB7BUxemPo2go9H0p2",
-        "vehicleId": "b4d3eb97-c74a-4528-9527-e7a847bcdb34",
-        "associationId": "2f3faebd-6159-4b03-9857-9dad6d9a82ac",
-        "ownerName": "Donnie G Fredericks",
-        "associationName": "The Most Awesome Taxi Association",
-        "vehicleReg": "BFF 33 GP",
-        "model": "Quantum",
-        "make": "Toyota",
-        "year": "2018",
-        "passengerCapacity": 16,
-        "active": 0,
-        "created": "2023-06-25T22:51:04.341+02:00",
-        "_class": "com.boha.kasietransie.data.dto.Vehicle"
+  public static formatISOStringDate(
+    dateString: string,
+    locale: string,
+  ): string {
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    };
+    if (locale) {
+      return date.toLocaleString(locale, options);
+    } else {
+      return date.toLocaleString('en', options);
     }
-    */
+  }
+  public static deleteOldFiles(): void {
+    Logger.log(`${mm} Deleting old files ...`);
+    const tempDir = path.join(__dirname, '..', 'tempFiles');
+    const files = fs.readdirSync(tempDir);
+    const currentTime = Date.now();
+    const tenMinutesAgo = currentTime - (10 * 60 * 1000); // 10 minutes in milliseconds
+
+    let cnt = 0;
+    for (const file of files) {
+      const filePath = path.join(tempDir, file);
+      const fileStats = fs.statSync(filePath);
+      const fileCreatedTime = fileStats.ctimeMs;
+      if (fileCreatedTime < tenMinutesAgo) {
+        fs.unlinkSync(filePath);
+        cnt++;
+      }
+    }
+    Logger.log(`${mm} Deleted: ${cnt} temporary files`);
+  }
+}

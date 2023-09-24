@@ -8,8 +8,10 @@ export class ElapsedTimeMiddleware implements NestMiddleware {
     const start = Date.now();
 
     res.on('finish', () => {
-      const elapsed = Date.now() - start;
-      Logger.log(`${mm} ${req.originalUrl} took  🔴 ${elapsed}ms  🔴 `);
+      const elapsed = (Date.now() - start) / 1000;
+      Logger.log(
+        `${mm} ${req.originalUrl} took 🌸🌸🌸 ${elapsed} seconds  🔴 🔴 statusCode: ${res.statusCode}`,
+      );
     });
 
     next();

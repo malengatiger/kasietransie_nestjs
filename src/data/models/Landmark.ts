@@ -5,9 +5,8 @@ import { Position } from './position';
   collection: 'Landmark',
 })
 export class Landmark {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   landmarkId: string;

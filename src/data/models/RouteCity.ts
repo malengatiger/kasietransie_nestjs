@@ -5,9 +5,8 @@ import { Position } from './position';
   collection: 'RouteCity',
 })
 export class RouteCity {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   routeId: string;
@@ -21,6 +20,10 @@ export class RouteCity {
   created: string;
   @Prop()
   associationId: string;
+  @Prop()
+  routeLandmarkId: string;
+  @Prop()
+  routeLandmarkName: string;
   @Prop()
   position: Position;
 }

@@ -98,6 +98,8 @@ import {
 import { MediaService } from './services/MediaService';
 import { VehiclePhoto, VehiclePhotoSchema } from './data/models/VehiclePhoto';
 import { VehicleVideo, VehicleVideoSchema } from './data/models/VehicleVideo';
+import { CityService } from './services/CityService';
+import { City, CitySchema } from './data/models/City';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -192,6 +194,18 @@ import { VehicleVideo, VehicleVideoSchema } from './data/models/VehicleVideo';
         schema: VehicleVideoSchema,
       },
     ]),
+    MongooseModule.forFeature([
+      {
+        name: City.name,
+        schema: CitySchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: RouteUpdateRequest.name,
+        schema: RouteUpdateRequestSchema,
+      },
+    ]),
   ],
 
   controllers: [
@@ -221,6 +235,7 @@ import { VehicleVideo, VehicleVideoSchema } from './data/models/VehicleVideo';
     AmbassadorService,
     VehicleService,
     MediaService,
+    CityService,
   ],
 })
 //export with middleware

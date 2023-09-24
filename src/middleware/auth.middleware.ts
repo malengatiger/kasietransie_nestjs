@@ -15,6 +15,13 @@ export class AuthMiddleware implements NestMiddleware {
   async use(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     const authToken = req.headers.authorization;
 
+    Logger.log(`${mm} request url: ${req.baseUrl} `);
+    const result = req.baseUrl.includes('removeAllDuplicateRoutePoints');
+    if (result) {
+      Logger.log(`${mm} letting you into the club without a ticket! 🔵 🔵 🔵 `);
+      next();
+      return;
+    }
     if (!authToken) {
       Logger.log(`${mm} authentication token not found in request header 🔴`);
       return res.status(401).json({

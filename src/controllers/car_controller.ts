@@ -18,6 +18,9 @@ import { RouteAssignment } from 'src/data/models/RouteAssignment';
 import { RouteAssignmentList } from 'src/data/helpers/RouteAssignmentList';
 import { VehicleArrival } from 'src/data/models/VehicleArrival';
 import { DispatchService } from 'src/services/DispatchService';
+import { MediaService } from 'src/services/MediaService';
+import { VehiclePhoto } from 'src/data/models/VehiclePhoto';
+import { MyUtils } from 'src/my-utils/my-utils';
 
 const mm = ' 🚼 🚼 🚼 RouteController  🚼';
 
@@ -28,11 +31,18 @@ export class CarController {
   constructor(
     private readonly carService: VehicleService,
     private readonly dispatchService: DispatchService,
+    private readonly mediaService: MediaService,
   ) {}
 
   @Post('addVehicle')
   async addVehicle(@Body() vehicle: Vehicle): Promise<Vehicle> {
     return await this.carService.addVehicle(vehicle);
+  }
+  @Post('addVehiclePhoto')
+  async addVehiclePhoto(
+    @Body() vehiclePhoto: VehiclePhoto,
+  ): Promise<VehiclePhoto> {
+    return await this.mediaService.addVehiclePhoto(vehiclePhoto);
   }
   @Post('addVehicleArrival')
   async addVehicleArrival(
@@ -89,6 +99,7 @@ export class CarController {
     this.logger.log('Sending file: ' + fileName);
     res.setHeader('Content-Type', 'application/octet-stream');
     res.setHeader('Content-Disposition', `attachment; filename=route.zip`);
+    MyUtils.deleteOldFiles();
     res.sendFile(fileName);
   }
 }

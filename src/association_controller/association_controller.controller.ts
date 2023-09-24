@@ -26,6 +26,8 @@ import { UserGeofenceEvent } from 'src/data/models/UserGeofenceEvent';
 import { UserService } from 'src/services/UserService';
 import { VehicleMediaRequest } from 'src/data/models/VehicleMediaRequest';
 import { MediaService } from 'src/services/MediaService';
+import { CityService } from 'src/services/CityService';
+import { City } from 'src/data/models/City';
 const mm = '🍐🍐🍐 AssociationController';
 
 @Controller('api/v1')
@@ -35,6 +37,7 @@ export class AssociationController {
     private readonly txService: TranslationService,
     private readonly userService: UserService,
     private readonly mediaService: MediaService,
+    private readonly cityService: CityService,
   ) {}
 
   @Get('getCountries')
@@ -75,13 +78,16 @@ export class AssociationController {
   async getAssociationVehicleMediaRequests(
     @Query() query: { associationId: string; startDate: string },
   ): Promise<VehicleMediaRequest[]> {
-    Logger.log(
-      `${mm} ... getAssociationVehicleMediaRequests starting, id: ${query.associationId} ...`,
-    );
     return await this.mediaService.getAssociationVehicleMediaRequests(
       query.associationId,
       query.startDate,
     );
+  }
+  @Get('getCountryCities')
+  async getCountryCities(
+    @Query() query: { countryId: string },
+  ): Promise<City[]> {
+    return await this.cityService.getCountryCities(query.countryId);
   }
   @Get('getAssociationById')
   public async getAssociationById(
@@ -112,7 +118,7 @@ export class AssociationController {
       query.associationId,
     );
   }
-
+  @Get('getAssociationSettings')
   public async getAssociationSettingsModels(
     @Query() query: { associationId: string },
   ): Promise<SettingsModel[]> {
@@ -128,6 +134,7 @@ export class AssociationController {
   public async downloadExampleVehiclesFile(): Promise<File> {
     return null;
   }
+  //getCountryCitiesZippedFile
   @Get('getVehiclesZippedFile')
   public async getAssociationVehiclesZippedFile(
     @Query() query: { associationId: string },
@@ -138,6 +145,36 @@ export class AssociationController {
         await this.associationService.getAssociationVehiclesZippedFile(
           query.associationId,
         );
+      this.sendFile(fileName, res);
+    } catch (error) {
+      Logger.log(`${mm} 👿👿👿👿 Error getting vehicle zipped file:`, error);
+      res.status(500).send(`${mm} 👿👿👿 Error downloading file: ${error}`);
+    }
+  }
+  @Get('getOwnerVehiclesZippedFile')
+  public async getOwnerVehiclesZippedFile(
+    @Query() query: { userId: string },
+    @Res() res: Response,
+  ) {
+    try {
+      const fileName = await this.associationService.getOwnerVehiclesZippedFile(
+        query.userId,
+      );
+      this.sendFile(fileName, res);
+    } catch (error) {
+      Logger.log(`${mm} 👿👿👿👿 Error getting vehicle zipped file:`, error);
+      res.status(500).send(`${mm} 👿👿👿 Error downloading file: ${error}`);
+    }
+  }
+  @Get('getCountryCitiesZippedFile')
+  public async getCountryCitiesZippedFile(
+    @Query() query: { countryId: string },
+    @Res() res: Response,
+  ) {
+    try {
+      const fileName = await this.associationService.getCountryCitiesZippedFile(
+        query.countryId,
+      );
       this.sendFile(fileName, res);
     } catch (error) {
       Logger.log(`${mm} 👿👿👿👿 Error getting vehicle zipped file:`, error);

@@ -1,6 +1,8 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { CounterBag } from 'src/data/helpers/CounterBag';
+import { AmbassadorPassengerCount } from 'src/data/models/AmbassadorPassengerCount';
 import { DispatchRecord } from 'src/data/models/DispatchRecord';
+import { AmbassadorService } from 'src/services/AmbassadorService';
 import { DispatchService } from 'src/services/DispatchService';
 import { MyFirebaseService } from 'src/services/FirebaseService';
 
@@ -9,14 +11,26 @@ export class DispatchController {
   constructor(
     private readonly dispatchService: DispatchService,
     private readonly fbService: MyFirebaseService,
+    private readonly ambassadorService: AmbassadorService,
   ) {}
 
-  @Post('addDispatch')
-  async addDispatch(
+  @Post('addDispatchRecord')
+  async addDispatchRecord(
     @Body() dispatchRecord: DispatchRecord,
   ): Promise<DispatchRecord> {
     return await this.dispatchService.addDispatchRecord(dispatchRecord);
   }
+  //getVehicleAmbassadorPassengerCounts
+  @Get('getVehicleAmbassadorPassengerCounts')
+  async getVehicleAmbassadorPassengerCounts(
+    @Query() query: { vehicleId: string; startDate: string },
+  ): Promise<AmbassadorPassengerCount[]> {
+    return await this.ambassadorService.getVehicleAmbassadorPassengerCounts(
+      query.vehicleId,
+      query.startDate,
+    );
+  }
+
   @Get('getVehicleDispatchRecords')
   async getVehicleDispatchRecords(
     @Query() query: { vehicleId: string; startDate: string },
@@ -28,10 +42,10 @@ export class DispatchController {
   }
   @Get('getMarshalDispatchRecords')
   async getMarshalDispatchRecords(
-    @Query() query: { vehicleId: string; startDate: string },
+    @Query() query: { marshalId: string; startDate: string },
   ): Promise<DispatchRecord[]> {
     return await this.dispatchService.getMarshalDispatchRecords(
-      query.vehicleId,
+      query.marshalId,
       query.startDate,
     );
   }

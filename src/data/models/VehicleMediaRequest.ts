@@ -4,9 +4,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
   collection: 'VehicleMediaRequest',
 })
 export class VehicleMediaRequest {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   userId: string;

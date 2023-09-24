@@ -4,9 +4,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
   collection: 'LocationRequest',
 })
 export class LocationRequest {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   associationId: string;

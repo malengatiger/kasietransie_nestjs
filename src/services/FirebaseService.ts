@@ -6,6 +6,8 @@ import { getMessaging } from 'firebase-admin/messaging';
 import * as admin from 'firebase-admin';
 import { GoogleAuth } from 'google-auth-library';
 import axios from 'axios';
+import { Constants } from 'src/my-utils/constants';
+import { MyUtils } from 'src/my-utils/my-utils';
 
 const mm = '🍑 🍑 🍑 FirebaseService 🍑 ';
 const firebaseConfig = {
@@ -27,11 +29,13 @@ export class MyFirebaseService {
     return null;
   }
   async sendInitializationMessage() {
+    const fmtDate = MyUtils.formatISOStringDate(Date.now().toString(), null);
+
     const message: admin.messaging.Message = {
-      topic: 'adminTopic',
+      topic: Constants.admin,
       data: {
         message: ' 🍑 🍑 Kasie Transie Backend Server started OK! 🅿️ 🅿️ 🅿️',
-        createdAt: new Date().toISOString(),
+        createdAt: Date.now().toString(),
       },
       notification: {
         title: 'Kasie Transie Backend',

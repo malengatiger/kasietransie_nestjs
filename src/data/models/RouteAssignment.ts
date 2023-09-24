@@ -4,9 +4,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
   collection: 'RouteAssignment',
 })
 export class RouteAssignment {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   associationId: string;

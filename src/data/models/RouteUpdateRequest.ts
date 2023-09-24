@@ -4,6 +4,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
   collection: 'RouteUpdateRequest',
 })
 export class RouteUpdateRequest {
+  _partitionKey: string;
+  _id: string;
   @Prop()
   associationId: string;
   @Prop()

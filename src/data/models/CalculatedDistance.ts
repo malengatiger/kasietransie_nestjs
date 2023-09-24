@@ -4,9 +4,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
   collection: 'CalculatedDistance',
 })
 export class CalculatedDistance {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   routeName: string;

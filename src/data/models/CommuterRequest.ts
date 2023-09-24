@@ -5,9 +5,8 @@ import { Position } from './position';
   collection: 'CommuterRequest',
 })
 export class CommuterRequest {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   commuterRequestId: string;

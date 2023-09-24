@@ -385,12 +385,12 @@ export class DispatchService {
     return null;
   }
   public async getMarshalDispatchRecords(
-    userId: string,
+    marshalId: string,
     startDate: string,
   ): Promise<DispatchRecord[]> {
     return this.dispatchRecordModel.find({
-      marshalId: userId,
-      startDate: startDate,
+      marshalId: marshalId,
+      created: { $gte: startDate },
     });
   }
   public async getLandmarkVehicleArrivals(

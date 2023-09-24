@@ -8,13 +8,14 @@ import { AmbassadorCheckIn } from 'src/data/models/AmbassadorCheckIn';
 import { RouteLandmark } from 'src/data/models/RouteLandmark';
 import { User } from 'src/data/models/User';
 import { Vehicle } from 'src/data/models/Vehicle';
+import { MessagingService } from 'src/messaging/messaging.service';
 
 const mm = 'AmbassadorService';
 
 @Injectable()
 export class AmbassadorService {
   constructor(
-    private configService: ConfigService,
+    private messagingService: MessagingService,
     @InjectModel(Vehicle.name)
     private vehicleModel: mongoose.Model<Vehicle>,
 
@@ -70,7 +71,9 @@ export class AmbassadorService {
   public async addAmbassadorPassengerCount(
     count: AmbassadorPassengerCount,
   ): Promise<AmbassadorPassengerCount> {
-    return await this.ambassadorPassengerCountModel.create(count);
+    const res = await this.ambassadorPassengerCountModel.create(count);
+    await this.messagingService.sendPassengerCountMessage(res);
+    return res;
   }
   public async generateRoutePassengerCounts(
     routeId: string,

@@ -7,9 +7,8 @@ import paginate from 'mongoose-paginate-v2';
   collection: 'Vehicle',
 })
 export class Vehicle {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   ownerId: string;

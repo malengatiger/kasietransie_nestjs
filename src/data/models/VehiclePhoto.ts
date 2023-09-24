@@ -5,9 +5,8 @@ import { Position } from './position';
   collection: 'VehiclePhoto',
 })
 export class VehiclePhoto {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   vehicleId: string;

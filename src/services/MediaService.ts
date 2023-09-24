@@ -35,7 +35,7 @@ export class MediaService {
   public async addVehiclePhoto(
     vehiclePhoto: VehiclePhoto,
   ): Promise<VehiclePhoto> {
-    return null;
+    return await this.vehiclePhotoModel.create(vehiclePhoto);
   }
   public async getVehicleMediaRequests(
     vehicleId: string,

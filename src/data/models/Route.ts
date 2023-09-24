@@ -5,9 +5,8 @@ import { RouteStartEnd } from './RouteStartEnd';
   collection: 'Route',
 })
 export class Route {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   routeId: string;

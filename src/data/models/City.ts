@@ -5,9 +5,8 @@ import { Position } from './position';
   collection: 'City',
 })
 export class City {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   name: string;

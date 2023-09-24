@@ -5,9 +5,8 @@ import { Position } from './position';
   collection: 'LocationResponse',
 })
 export class LocationResponse {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   associationId: string;

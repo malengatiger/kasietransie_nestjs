@@ -5,9 +5,8 @@ import { Position } from './position';
   collection: 'AmbassadorCheckIn',
 })
 export class AmbassadorCheckIn {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   associationId: string;

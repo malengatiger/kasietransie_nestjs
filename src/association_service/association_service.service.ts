@@ -17,6 +17,7 @@ import { Vehicle } from 'src/data/models/Vehicle';
 import { FileArchiverService } from 'src/my-utils/zipper';
 import { Country } from 'src/data/models/Country';
 import { UserService } from 'src/services/UserService';
+import { CityService } from 'src/services/CityService';
 
 const mm = '🍎🍎🍎 AssociationService: 🍎🍎🍎';
 @Injectable()
@@ -25,6 +26,8 @@ export class AssociationService {
     private configService: ConfigService,
     private archiveService: FileArchiverService,
     private userService: UserService,
+    private cityService: CityService,
+
     //
     @InjectModel(User.name)
     private userModel: mongoose.Model<User>,
@@ -83,6 +86,29 @@ export class AssociationService {
 
     const file = await this.archiveService.zip([{ content: json }]);
     Logger.log(`${mm} ... getAssociationVehicles found: ${list.length} ...`);
+    return file;
+  }
+  public async getOwnerVehiclesZippedFile(userId: string): Promise<string> {
+    const list = await this.vehicleModel.find({ ownerId: userId });
+    const json = JSON.stringify(list);
+
+    const file = await this.archiveService.zip([{ content: json }]);
+    Logger.log(
+      `${mm} ... getOwnerVehiclesZippedFile found: ${list.length} ...`,
+    );
+    return file;
+  }
+  public async getCountryCitiesZippedFile(countryId: string): Promise<string> {
+    Logger.log(
+      `${mm} ... getCountryCitiesZippedFile starting, id: ${countryId} ...`,
+    );
+    const list = await this.cityService.getCountryCities(countryId);
+    const json = JSON.stringify(list);
+
+    const file = await this.archiveService.zip([{ content: json }]);
+    Logger.log(
+      `${mm} ... getCountryCitiesZippedFile found: ${list.length} ...`,
+    );
     return file;
   }
   public async getAssociationById(associationId: string): Promise<Association> {

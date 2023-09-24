@@ -5,9 +5,8 @@ import { Position } from './position';
   collection: 'VehicleHeartbeat',
 })
 export class VehicleHeartbeat {
-  @Prop()
   _partitionKey: string;
-  @Prop()
+
   _id: string;
   @Prop()
   vehicleHeartbeatId: string;

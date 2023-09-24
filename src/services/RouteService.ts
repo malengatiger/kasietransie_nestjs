@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { RouteUpdateRequest } from 'src/data/models/RouteUpdateRequest';
@@ -8,12 +7,17 @@ import { VehicleMediaRequest } from 'src/data/models/VehicleMediaRequest';
 import { RouteLandmark } from 'src/data/models/RouteLandmark';
 import { RouteCity } from 'src/data/models/RouteCity';
 import { Route } from 'src/data/models/Route';
-import { CalculatedDistanceList } from 'src/data/helpers/CalculatedDistanceList';
 import { RouteBag } from 'src/data/helpers/RouteBag';
 import { CalculatedDistance } from 'src/data/models/CalculatedDistance';
 import { RoutePoint } from 'src/data/models/RoutePoint';
 import { MyUtils } from 'src/my-utils/my-utils';
 import { FileArchiverService } from 'src/my-utils/zipper';
+import { MessagingService } from 'src/messaging/messaging.service';
+import { RoutePointList } from 'src/data/models/RoutePointList';
+import { City } from 'src/data/models/City';
+import { CityService } from './CityService';
+import { compareAsc, format } from 'date-fns';
+import parseISO from 'date-fns/fp/parseISO';
 
 const mm = 'RouteService';
 
@@ -21,7 +25,9 @@ const mm = 'RouteService';
 export class RouteService {
   constructor(
     // private configService: ConfigService,
-    private archiveService: FileArchiverService,
+    private readonly archiveService: FileArchiverService,
+    private readonly messagingService: MessagingService,
+    private readonly cityService: CityService,
 
     @InjectModel(RouteUpdateRequest.name)
     private routeUpdateRequestModel: mongoose.Model<RouteUpdateRequest>,
@@ -34,6 +40,9 @@ export class RouteService {
 
     @InjectModel(RouteCity.name)
     private routeCityModel: mongoose.Model<RouteCity>,
+
+    @InjectModel(City.name)
+    private cityModel: mongoose.Model<City>,
 
     @InjectModel(RoutePoint.name)
     private routePointModel: mongoose.Model<RoutePoint>,
@@ -103,15 +112,32 @@ export class RouteService {
   public async getCalculatedDistances(
     routeId: string,
   ): Promise<CalculatedDistance[]> {
-    return await this.calculatedDistanceModel.find({ routeId: routeId });
+    return await this.calculatedDistanceModel
+      .find({ routeId: routeId })
+      .sort({ index: 1 });
   }
   public async getRouteUpdateRequests(
     routeId: string,
   ): Promise<RouteUpdateRequest[]> {
     return [];
   }
-  public async refreshRoute(routeId: string): Promise<RouteBag> {
-    return null;
+  public async refreshRoute(routeId: string): Promise<string> {
+    const route = await this.routeModel.findOne({ routeId: routeId });
+    const marks = await this.routeLandmarkModel.find({ routeId: routeId });
+    const points = await this.routePointModel
+      .find({ routeId: routeId })
+      .sort({ index: 1 });
+    const cities = await this.routeCityModel
+      .find({ routeId: routeId })
+      .sort({ name: 1 });
+    const bag = new RouteBag();
+    bag.route = route;
+    bag.routeLandmarks = marks;
+    bag.routePoints = points;
+    bag.routeCities = cities;
+    const jsonString = JSON.stringify(bag);
+    const fileName = await this.archiveService.zip([{ content: jsonString }]);
+    return fileName;
   }
   public async updateRouteColor(
     routeId: string,
@@ -122,9 +148,14 @@ export class RouteService {
     await this.routeModel.create(r);
     return r;
   }
-  public async addRoutePoints(routePoints: RoutePoint[]): Promise<number> {
-    const m = await this.routePointModel.create(routePoints);
-    return m.length;
+  public async addRoutePoints(list: RoutePointList): Promise<number> {
+    Logger.log(
+      `${mm} addRoutePoints adding ${list.routePoints.length} points ...`,
+    );
+
+    const pp = await this.routePointModel.insertMany(list.routePoints);
+    Logger.log(`${mm} addRoutePoints insertMany result: ${pp.length}`);
+    return pp.length;
   }
   public async deleteRoutePointsFromIndex(
     routeId: string,
@@ -140,14 +171,72 @@ export class RouteService {
       .sort({ index: 1 });
   }
   public async addCalculatedDistances(
-    list: CalculatedDistanceList,
+    list: CalculatedDistance[],
   ): Promise<CalculatedDistance[]> {
-    return await this.calculatedDistanceModel.create(list.calculatedDistances);
+    const routeId = list[0].routeId;
+    await this.calculatedDistanceModel.deleteMany({
+      routeId: routeId,
+    });
+    return await this.calculatedDistanceModel.insertMany(list);
   }
   public async addRouteLandmark(
     routeLandmark: RouteLandmark,
-  ): Promise<RouteLandmark> {
-    return await this.routeLandmarkModel.create(routeLandmark);
+  ): Promise<RouteLandmark[]> {
+    //get nearest cities; within 5 km
+    const cities = await this.cityService.getCitiesNear(
+      routeLandmark.position.coordinates.at(1),
+      routeLandmark.position.coordinates.at(0),
+      5 * 1000,
+    );
+    const routeCities: RouteCity[] = [];
+    cities.forEach((c) => {
+      const routeCity = new RouteCity();
+      routeCity.routeId = routeLandmark.routeId;
+      routeCity.associationId = routeLandmark.associationId;
+      routeCity.cityId = c.cityId;
+      routeCity.cityName = c.name;
+      routeCity.position = c.position;
+      routeCity.created = new Date().toISOString();
+      routeCity.routeName = routeLandmark.routeName;
+      routeCity.routeLandmarkId = routeLandmark.landmarkId;
+      routeCity.routeLandmarkName = routeLandmark.landmarkName;
+      routeCities.push(routeCity);
+    });
+    const rc = await this.routeCityModel.insertMany(routeCities);
+    Logger.log(
+      `${mm} route cities added: ${rc.length} for landmark: ${routeLandmark.landmarkName}`,
+    );
+    const mark = await this.routeLandmarkModel.create(routeLandmark);
+    Logger.log(`${mm} route landmark added: ${mark.landmarkName}`);
+    const rem = await this.routeLandmarkModel
+      .find({ routeId: mark.routeId })
+      .sort({ index: 1 });
+    return rem;
+  }
+  public async deleteRouteLandmark(
+    routeLandmarkId: string,
+  ): Promise<RouteLandmark[]> {
+    const mark = await this.routeLandmarkModel.findOne({
+      landmarkId: routeLandmarkId,
+    });
+    //delete cities
+    const list = await this.routeCityModel.find({
+      routeLandmarkId: routeLandmarkId,
+    });
+    if (list.length > 0) {
+      await this.routeCityModel.deleteMany(list);
+    }
+    await this.routeLandmarkModel.deleteOne({
+      landmarkId: routeLandmarkId,
+    });
+    const res = await this.routeLandmarkModel
+      .find({ routeId: mark.routeId })
+      .sort({ index: 1 });
+    Logger.log(
+      `${mm} routeLandmark deleted successfully, returning ${res.length}`,
+    );
+
+    return res;
   }
   public async addVehicleMediaRequest(
     vehicleMediaRequest: VehicleMediaRequest,
@@ -157,7 +246,9 @@ export class RouteService {
   public async addRouteUpdateRequest(
     routeUpdateRequest: RouteUpdateRequest,
   ): Promise<RouteUpdateRequest> {
-    return await this.routeUpdateRequestModel.create(routeUpdateRequest);
+    const res = await this.routeUpdateRequestModel.create(routeUpdateRequest);
+    await this.messagingService.sendRouteUpdateMessage(routeUpdateRequest);
+    return res;
   }
   public async updateRouteLandmark(
     routeLandmark: RouteLandmark,
@@ -166,6 +257,9 @@ export class RouteService {
   }
   public async addRouteCity(routeCity: RouteCity): Promise<RouteCity> {
     return await this.routeCityModel.create(routeCity);
+  }
+  public async addRouteCities(routeCities: RouteCity[]): Promise<RouteCity[]> {
+    return await this.routeCityModel.create(routeCities);
   }
   public async getRouteCities(routeId: string): Promise<RouteCity[]> {
     return await this.routeCityModel.find({ routeId: routeId });
@@ -223,32 +317,32 @@ export class RouteService {
           routeId: route.routeId,
         });
         points.push(list);
-        Logger.log(
-          `${mm}  \t🍎🍎 route: ${route.name} routePoints: ${list.length} `,
-        );
+        // Logger.log(
+        //   `${mm}  \t🍎🍎 route: ${route.name} routePoints: ${list.length} `,
+        // );
 
         const list1 = await this.routeLandmarkModel.find({
           routeId: route.routeId,
         });
-        Logger.log(
-          `${mm}  \t🍎🍎 route: ${route.name} routeLandmarks: ${list1.length} `,
-        );
+        // Logger.log(
+        //   `${mm}  \t🍎🍎 route: ${route.name} routeLandmarks: ${list1.length} `,
+        // );
         landmarks.push(list1);
 
         const list2 = await this.routeCityModel.find({
           routeId: route.routeId,
         });
         cities.push(list2);
-        Logger.log(
-          `${mm}  \t🍎🍎 route: ${route.name} routeCities: ${list2.length} \n\n`,
-        );
+        // Logger.log(
+        //   `${mm}  \t🍎🍎 route: ${route.name} routeCities: ${list2.length} \n\n`,
+        // );
       }),
     );
     //
-    Logger.log(`${mm} data.route:   🔷🔷 ${routes.length} routes`);
-    Logger.log(`${mm} data.marks:   🔷🔷 ${landmarks.length} marks`);
-    Logger.log(`${mm} data.cities:  🔷🔷 ${cities.length} cities`);
-    Logger.log(`${mm} data.points:  🔷🔷 ${points.length} points`);
+    // Logger.log(`${mm} data.route:   🔷🔷 ${routes.length} routes`);
+    // Logger.log(`${mm} data.marks:   🔷🔷 ${landmarks.length} marks`);
+    // Logger.log(`${mm} data.cities:  🔷🔷 ${cities.length} cities`);
+    // Logger.log(`${mm} data.points:  🔷🔷 ${points.length} points`);
 
     const data = {
       routes: routes,
@@ -291,5 +385,118 @@ export class RouteService {
     const json = JSON.stringify(points);
     const filePath = this.archiveService.zip([{ content: json }]);
     return filePath;
+  }
+  public async getRoute(routeId: string): Promise<Route> {
+    return await this.routeModel.findOne({ routeId: routeId });
+  }
+  /**
+   * Delete route points starting nearest to supplied location and return remaining points
+   * @param routeId
+   * @param latitude
+   * @param longitude
+   * @returns RoutePoint[]
+   */
+  public async deleteRoutePoints(
+    routeId: string,
+    latitude: number,
+    longitude: number,
+  ): Promise<string> {
+    const distance = 100;
+    Logger.log(
+      `${mm} latitude: ${latitude}, longitude: ${longitude} route: ${routeId}`,
+    );
+    const query = {
+      routeId: routeId,
+      position: {
+        $near: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [Number(longitude), Number(latitude)],
+          },
+          $maxDistance: distance,
+        },
+      },
+    };
+    // Find documents based on our query
+    const points = await this.routePointModel.find(query);
+
+    if (points.length == 0) {
+      throw new Error('Nearest routePoints not found');
+    }
+    const point = points[0];
+    //delete points
+    const res = await this.routePointModel.deleteMany({
+      routeId: point.routeId,
+      index: { $gte: point.index },
+    });
+    //get remaining points
+    const list = await this.routePointModel
+      .find({
+        routeId: point.routeId,
+      })
+      .sort({ index: 1 });
+    const json = JSON.stringify(list);
+    Logger.log(
+      `${mm} Nearest points found: ${points.length} deletion result: ${res}
+      total points remaining: ${list.length} raw json string size: ${json.length} bytes`,
+    );
+
+    const filePath = await this.archiveService.zip([{ content: json }]);
+    return filePath;
+  }
+  async removeAllDuplicateRoutePoints(): Promise<any> {
+    const list = await this.routeModel.find({});
+    list.forEach(async (route) => {
+      Logger.log(`${mm} Removing routePoints from ${route.name}`);
+      await this.removeDuplicateRoutePoints(route.routeId);
+    });
+  }
+  async removeDuplicateRoutePoints(routeId: string): Promise<any> {
+    let cnt = 0;
+    try {
+      // Find duplicate route points
+      const duplicateRoutePoints = await this.routePointModel.aggregate([
+        {
+          $match: {
+            routeId: routeId,
+          },
+        },
+        {
+          $group: {
+            _id: { index: '$index' },
+            count: { $sum: 1 },
+            ids: { $push: '$_id' },
+          },
+        },
+        {
+          $match: {
+            count: { $gt: 1 },
+          },
+        },
+      ]);
+
+      Logger.log(
+        `${mm} Duplicate route points found: ${duplicateRoutePoints.length}`,
+      );
+
+      // Remove duplicates
+      for (const duplicate of duplicateRoutePoints) {
+        const idsToRemove = duplicate.ids.slice(1); // Keep the first record, remove the rest
+        const res = await this.routePointModel.deleteMany({
+          _id: { $in: idsToRemove },
+        });
+        cnt += res.deletedCount;
+      }
+
+      Logger.log(
+        `${mm} Duplicate route points removed successfully. ${cnt} routePoints`,
+      );
+    } catch (error) {
+      Logger.error('Error removing duplicate route points:', error);
+    }
+    return {
+      message: `${mm} Duplicate route points removed successfully`,
+      count: cnt,
+    };
   }
 }

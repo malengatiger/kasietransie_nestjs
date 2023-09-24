@@ -5,18 +5,15 @@ import {
   Query,
   Logger,
   Post,
-  Body,
   UploadedFile,
   UseInterceptors,
   Get,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { Vehicle } from 'src/data/models/Vehicle';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { RouteAssignment } from 'src/data/models/RouteAssignment';
-import { RouteAssignmentList } from 'src/data/helpers/RouteAssignmentList';
 import { UserService } from 'src/services/UserService';
 import { User } from 'src/data/models/User';
+import { MyUtils } from 'src/my-utils/my-utils';
 
 const mm = ' 🚼 🚼 🚼 UserController  🚼';
 
@@ -56,6 +53,7 @@ export class UserController {
     this.logger.log('Sending file: ' + fileName);
     res.setHeader('Content-Type', 'application/octet-stream');
     res.setHeader('Content-Disposition', `attachment; filename=route.zip`);
+    MyUtils.deleteOldFiles();
     res.sendFile(fileName);
   }
 }

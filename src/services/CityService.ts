@@ -6,13 +6,14 @@ import mongoose from 'mongoose';
 import { City } from 'src/data/models/City';
 import { Country } from 'src/data/models/Country';
 import { State } from 'src/data/models/State';
+import { MyUtils } from 'src/my-utils/my-utils';
 
 const mm = 'CityService';
 
 @Injectable()
 export class CityService {
   constructor(
-    private configService: ConfigService,
+    private cityService: ConfigService,
     @InjectModel(City.name)
     private cityModel: mongoose.Model<City>,
   ) {}
@@ -20,15 +21,12 @@ export class CityService {
   public async addCity(city: City): Promise<City> {
     return null;
   }
-  public async getCountryCities(
-    countryId: string,
-    page: number,
-  ): Promise<City[]> {
-    return [];
+  public async getCountryCities(countryId: string): Promise<City[]> {
+    return await this.cityModel
+      .find({ countryId: countryId })
+      .sort({ name: 1 });
   }
-  public async getCountryCitiesZippedFile(countryId: string): Promise<File> {
-    return null;
-  }
+
   public async getCountries(): Promise<Country[]> {
     return [];
   }
@@ -43,10 +41,22 @@ export class CityService {
   public async getCitiesNear(
     latitude: number,
     longitude: number,
-    minDistanceInMetres: number,
     maxDistanceInMetres: number,
   ): Promise<City[]> {
-    return [];
+    const query = {
+      position: {
+        $near: {
+          $geometry: {
+            type: 'Point',
+            coordinates: [Number(longitude), Number(latitude)],
+          },
+          $maxDistance: maxDistanceInMetres,
+        },
+      },
+    };
+    // Find documents based on our query
+    const cities = await this.cityModel.find(query);
+    return cities;
   }
   public async getCountryStates(countryId: string): Promise<State[]> {
     return [];
