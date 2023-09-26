@@ -28,4 +28,6 @@ async function bootstrap() {
   await srv.initializeFirebase();
   await srv.sendInitializationMessage();
 }
-bootstrap();
+bootstrap().then((r) =>
+  Logger.debug(`Bootstrapping is complete. 💖💖💖 ... Boogy on!`),
+);

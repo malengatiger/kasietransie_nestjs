@@ -21,6 +21,11 @@ import { DispatchService } from 'src/services/DispatchService';
 import { MediaService } from 'src/services/MediaService';
 import { VehiclePhoto } from 'src/data/models/VehiclePhoto';
 import { MyUtils } from 'src/my-utils/my-utils';
+import { LocationRequestService } from '../services/LocationRequestService';
+import { LocationRequest } from '../data/models/LocationRequest';
+import { LocationResponse } from '../data/models/LocationResponse';
+import { RouteService } from '../services/RouteService';
+import { VehicleMediaRequest } from '../data/models/VehicleMediaRequest';
 
 const mm = ' 🚼 🚼 🚼 RouteController  🚼';
 
@@ -32,11 +37,31 @@ export class CarController {
     private readonly carService: VehicleService,
     private readonly dispatchService: DispatchService,
     private readonly mediaService: MediaService,
+    private readonly locationRequestService: LocationRequestService,
+    private readonly routeService: RouteService,
   ) {}
 
   @Post('addVehicle')
   async addVehicle(@Body() vehicle: Vehicle): Promise<Vehicle> {
     return await this.carService.addVehicle(vehicle);
+  }
+  @Post('addLocationRequest')
+  async addLocationRequest(
+    @Body() request: LocationRequest,
+  ): Promise<LocationRequest> {
+    return await this.locationRequestService.addLocationRequest(request);
+  }
+  @Post('addLocationResponse')
+  async addLocationResponse(
+    @Body() request: LocationResponse,
+  ): Promise<LocationResponse> {
+    return await this.locationRequestService.addLocationResponse(request);
+  }
+  @Post('addVehicleMediaRequest')
+  async addVehicleMediaRequest(
+    @Body() request: VehicleMediaRequest,
+  ): Promise<VehicleMediaRequest> {
+    return await this.routeService.addVehicleMediaRequest(request);
   }
   @Post('addVehiclePhoto')
   async addVehiclePhoto(

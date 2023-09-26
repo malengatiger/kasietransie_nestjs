@@ -108,15 +108,18 @@ export class AssociationController {
   }
   @Get('getAssociationAppErrors')
   public async getAssociationAppErrors(
-    @Query() query: { associationId: string },
+    @Query() query: { associationId: string; startDate: string },
   ): Promise<AppError[]> {
-    Logger.log(
-      `${mm} ... getAssociationAppErrors
-        starting, id: ${query.associationId} ...`,
-    );
     return await this.associationService.getAssociationAppErrors(
       query.associationId,
+      query.startDate,
     );
+  }
+  @Get('getAppErrors')
+  public async getAppErrors(
+    @Query() query: { startDate: string },
+  ): Promise<AppError[]> {
+    return await this.associationService.getAppErrors(query.startDate);
   }
   @Get('getAssociationSettings')
   public async getAssociationSettingsModels(

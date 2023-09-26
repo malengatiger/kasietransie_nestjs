@@ -78,6 +78,16 @@ export class RouteController {
     );
     return list;
   }
+  @Get('updateRouteColor')
+  async updateRouteColor(
+    @Query() query: { routeId: string; color: string },
+  ): Promise<Route> {
+    const route = await this.routeService.updateRouteColor(
+      query.routeId,
+      query.color,
+    );
+    return route;
+  }
   @Get('deleteRouteLandmark')
   async deleteRouteLandmark(
     @Query() query: { routeLandmarkId: string },

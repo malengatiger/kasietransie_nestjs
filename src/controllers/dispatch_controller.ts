@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { BigBag } from 'src/data/helpers/BigBag';
 import { CounterBag } from 'src/data/helpers/CounterBag';
 import { AmbassadorPassengerCount } from 'src/data/models/AmbassadorPassengerCount';
 import { DispatchRecord } from 'src/data/models/DispatchRecord';
@@ -30,6 +31,15 @@ export class DispatchController {
       query.startDate,
     );
   }
+  @Get('getVehicleCountsByDate')
+  async getVehicleCountsByDate(
+    @Query() query: { vehicleId: string; startDate: string },
+  ): Promise<CounterBag[]> {
+    return await this.dispatchService.getVehicleCountsByDate(
+      query.vehicleId,
+      query.startDate,
+    );
+  }
 
   @Get('getVehicleDispatchRecords')
   async getVehicleDispatchRecords(
@@ -54,5 +64,14 @@ export class DispatchController {
     @Query() query: { vehicleId: string },
   ): Promise<CounterBag[]> {
     return await this.dispatchService.getVehicleCounts(query.vehicleId);
+  }
+  @Get('getOwnersBag')
+  async getOwnersBag(
+    @Query() query: { userId: string; startDate: string },
+  ): Promise<BigBag> {
+    return await this.dispatchService.getOwnersBag(
+      query.userId,
+      query.startDate,
+    );
   }
 }

@@ -29,60 +29,31 @@ export class MyFirebaseService {
     return null;
   }
   async sendInitializationMessage() {
-    const fmtDate = MyUtils.formatISOStringDate(Date.now().toString(), null);
 
+    const date = MyUtils.formatISOStringDate(new Date().toISOString(),  'en');
     const message: admin.messaging.Message = {
       topic: Constants.admin,
       data: {
-        message: ' 🍑 🍑 Kasie Transie Backend Server started OK! 🅿️ 🅿️ 🅿️',
-        createdAt: Date.now().toString(),
+        message:
+          '🍑🍑 Kasie Transie Backend Server (Node/NestJS) started OK! 🅿️ 🅿️ 🅿️',
+        date: date,
       },
       notification: {
         title: 'Kasie Transie Backend',
-        body: 'Kasie Transie is running good! 🅿️ 🅿️ 🅿️',
+        body: `Kasie Transie is running good! : ${date}
+        )}🅿️ 🅿️ 🅿️`,
       },
     };
 
     try {
       const response = await admin.messaging().send(message);
       Logger.log(
-        `${mm} 🅿️ 🅿️ 🅿️  Successfully sent FCM message: \n🚺 🚺 🚺 ${JSON.stringify(
+        `${mm} 🅿️ 🅿️ 🅿️ Successfully sent FCM message: \n🚺 🚺 🚺 ${JSON.stringify(
           message,
         )} \n🚺 🚺 🚺 FCM response: ${response}`,
       );
     } catch (error) {
       console.error('Error sending message:', error);
     }
-  }
-
-  async getMessagesFromFCMTopic(topic: string): Promise<any[]> {
-    const serverKey = process.env.FIREBASE_SERVER_KEY; // Replace with your FCM server key
-    const messages: any[] = [];
-    Logger.log(
-      `${mm} .... getMessagesFromFCMTopic geting messages from ${topic}`,
-    );
-    try {
-      const response = await axios.post(
-        `https://fcm.googleapis.com/v1/projects/${process.env.GOOGLE_CLOUD_PROJECT}/messages:list`,
-        {
-          topic: `projects/${process.env.GOOGLE_CLOUD_PROJECT}/topics/${topic}`,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${serverKey}`,
-          },
-        },
-      );
-
-      const messages = response.data.messages;
-      console.log(`${mm} Messages from adminTopic:`, messages);
-      // Process the messages as per your requirements
-    } catch (error) {
-      console.error('${mm} Error retrieving messages:', error);
-    }
-    Logger.log(
-      `${mm} .... getMessagesFromFCMTopic found ${messages} messages from ${topic}`,
-    );
-    return messages;
   }
 }

@@ -22,4 +22,5 @@ export class Constants {
   public static readonly vehicleMediaRequest = 'vehicleMediaRequest';
   public static readonly routeUpdateRequest = 'routeUpdateRequest';
   public static readonly admin = 'admin';
+  public static readonly appError = 'appError';
 }

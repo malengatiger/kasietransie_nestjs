@@ -5,6 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { LocationRequest } from 'src/data/models/LocationRequest';
 import { LocationResponse } from 'src/data/models/LocationResponse';
+import { MessagingService } from '../messaging/messaging.service';
 
 const mm = 'LocationRequestService';
 
@@ -12,6 +13,8 @@ const mm = 'LocationRequestService';
 export class LocationRequestService {
   constructor(
     private configService: ConfigService,
+    private messagingService: MessagingService,
+
     @InjectModel(LocationRequest.name)
     private locationRequestModel: mongoose.Model<LocationRequest>,
 
@@ -22,11 +25,15 @@ export class LocationRequestService {
   public async addLocationRequest(
     locationRequest: LocationRequest,
   ): Promise<LocationRequest> {
-    return null;
+    const req = this.locationRequestModel.create(locationRequest);
+    await this.messagingService.sendLocationRequestMessage(locationRequest);
+    return req;
   }
   public async addLocationResponse(
     locationResponse: LocationResponse,
   ): Promise<LocationResponse> {
-    return null;
+    const res = this.locationResponseModel.create(locationResponse);
+    await this.messagingService.sendLocationResponseMessage(locationResponse);
+    return res;
   }
 }

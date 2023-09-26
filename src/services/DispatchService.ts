@@ -180,7 +180,7 @@ export class DispatchService {
     dispatchRecord: DispatchRecord,
   ): Promise<DispatchRecord> {
     const res = await this.dispatchRecordModel.create(dispatchRecord);
-    this.messagingService.sendDispatchMessage(dispatchRecord);
+    await this.messagingService.sendDispatchMessage(dispatchRecord);
     Logger.log(`${mm} ... add DispatchRecord completed: 🛎🛎`);
     Logger.log(`${mm} ${res}`);
     return res;
@@ -369,7 +369,7 @@ export class DispatchService {
   public async addDispatchRecords(
     dispatchRecordList: DispatchRecordList,
   ): Promise<DispatchRecord[]> {
-    return await this.dispatchRecordModel.create(
+    return await this.dispatchRecordModel.insertMany(
       dispatchRecordList.dispatchRecords,
     );
   }
@@ -382,7 +382,34 @@ export class DispatchService {
     vehicleId: string,
     startDate: string,
   ): Promise<VehicleBag> {
-    return null;
+    const dispatches = await this.dispatchRecordModel.find({
+      vehicleId: vehicleId,
+      created: { $gte: startDate },
+    });
+    const beats = await this.vehicleHeartbeatModel.find({
+      vehicleId: vehicleId,
+      created: { $gte: startDate },
+    });
+    const counts = await this.ambassadorPassengerCountModel.find({
+      vehicleId: vehicleId,
+      created: { $gte: startDate },
+    });
+    const arrivals = await this.vehicleArrivalModel.find({
+      vehicleId: vehicleId,
+      created: { $gte: startDate },
+    });
+    const deps = await this.vehicleDepartureModel.find({
+      vehicleId: vehicleId,
+      created: { $gte: startDate },
+    });
+    const bag = new VehicleBag();
+    bag.arrivals = arrivals;
+    bag.dispatchRecords = dispatches;
+    bag.created = new Date().toISOString();
+    bag.departures = deps;
+    bag.heartbeats = beats;
+    bag.vehicleId = vehicleId;
+    return bag;
   }
   public async getMarshalDispatchRecords(
     marshalId: string,
@@ -402,43 +429,84 @@ export class DispatchService {
     vehicleId: string,
     startDate: string,
   ): Promise<CounterBag[]> {
-    return [];
+    const departures = await this.vehicleDepartureModel.countDocuments({
+      vehicleId: vehicleId,
+      created: { $gte: startDate },
+    });
+    const dispatches = await this.dispatchRecordModel.countDocuments({
+      vehicleId: vehicleId,
+      created: { $gte: startDate },
+    });
+    const arrivals = await this.vehicleArrivalModel.countDocuments({
+      vehicleId: vehicleId,
+      created: { $gte: startDate },
+    });
+    const heartbeats = await this.vehicleHeartbeatModel.countDocuments({
+      vehicleId: vehicleId,
+      created: { $gte: startDate },
+    });
+    const passCounts = await this.ambassadorPassengerCountModel.countDocuments({
+      vehicleId: vehicleId,
+      created: { $gte: startDate },
+    });
+    const bags = [];
+    const bag1 = new CounterBag();
+    bag1.count = departures;
+    bag1.description = 'VehicleDeparture';
+    bags.push(bag1);
+    const bag2 = new CounterBag();
+    bag2.count = dispatches;
+    bag2.description = 'DispatchRecord';
+    bags.push(bag2);
+    const bag3 = new CounterBag();
+    bag3.count = arrivals;
+    bag3.description = 'VehicleArrival';
+    bags.push(bag3);
+    const bag4 = new CounterBag();
+    bag4.count = heartbeats;
+    bag4.description = 'VehicleHeartbeat';
+    bags.push(bag4);
+    const bag5 = new CounterBag();
+    bag5.count = passCounts;
+    bag5.description = 'AmbassadorPassengerCount';
+    bags.push(bag5);
+    return bags;
   }
   public async getVehicleCounts(vehicleId: string): Promise<CounterBag[]> {
-    const departures = await this.vehicleDepartureModel.find({
+    const departures = await this.vehicleDepartureModel.countDocuments({
       vehicleId: vehicleId,
     });
-    const dispatches = await this.dispatchRecordModel.find({
+    const dispatches = await this.dispatchRecordModel.countDocuments({
       vehicleId: vehicleId,
     });
-    const arrivals = await this.vehicleArrivalModel.find({
+    const arrivals = await this.vehicleArrivalModel.countDocuments({
       vehicleId: vehicleId,
     });
-    const heartbeats = await this.vehicleHeartbeatModel.find({
+    const heartbeats = await this.vehicleHeartbeatModel.countDocuments({
       vehicleId: vehicleId,
     });
-    const passCounts = await this.ambassadorPassengerCountModel.find({
+    const passCounts = await this.ambassadorPassengerCountModel.countDocuments({
       vehicleId: vehicleId,
     });
     const bags = [];
     const bag1 = new CounterBag();
-    bag1.count = departures.length;
+    bag1.count = departures;
     bag1.description = 'VehicleDeparture';
     bags.push(bag1);
     const bag2 = new CounterBag();
-    bag2.count = dispatches.length;
+    bag2.count = dispatches;
     bag2.description = 'DispatchRecord';
     bags.push(bag2);
     const bag3 = new CounterBag();
-    bag3.count = arrivals.length;
+    bag3.count = arrivals;
     bag3.description = 'VehicleArrival';
     bags.push(bag3);
     const bag4 = new CounterBag();
-    bag4.count = heartbeats.length;
+    bag4.count = heartbeats;
     bag4.description = 'VehicleHeartbeat';
     bags.push(bag4);
     const bag5 = new CounterBag();
-    bag5.count = passCounts.length;
+    bag5.count = passCounts;
     bag5.description = 'AmbassadorPassengerCount';
     bags.push(bag5);
 
@@ -448,7 +516,37 @@ export class DispatchService {
     userId: string,
     startDate: string,
   ): Promise<BigBag> {
-    return null;
+    const counts = await this.ambassadorPassengerCountModel.find({
+      ownerId: userId,
+      created: { $gte: startDate },
+    });
+    const heartbeats = await this.vehicleHeartbeatModel.find({
+      ownerId: userId,
+      created: { $gte: startDate },
+    });
+    const arrivals = await this.vehicleArrivalModel.find({
+      ownerId: userId,
+      created: { $gte: startDate },
+    });
+    const deps = await this.vehicleDepartureModel.find({
+      ownerId: userId,
+      created: { $gte: startDate },
+    });
+    const disps = await this.dispatchRecordModel.find({
+      ownerId: userId,
+      created: { $gte: startDate },
+    });
+    const bag = new BigBag();
+    bag.passengerCounts = counts;
+    bag.vehicleHeartbeats = heartbeats;
+    bag.vehicleDepartures = deps;
+    bag.dispatchRecords = disps;
+    bag.vehicleArrivals = arrivals;
+    bag.created = new Date().toISOString();
+    Logger.log(
+      `${mm} dispatches: ${disps.length} arrivals: ${arrivals.length}`,
+    );
+    return bag;
   }
   public async getAssociationCounts(
     associationId: string,

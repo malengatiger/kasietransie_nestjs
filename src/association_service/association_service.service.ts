@@ -18,6 +18,7 @@ import { FileArchiverService } from 'src/my-utils/zipper';
 import { Country } from 'src/data/models/Country';
 import { UserService } from 'src/services/UserService';
 import { CityService } from 'src/services/CityService';
+import { MessagingService } from '../messaging/messaging.service';
 
 const mm = '🍎🍎🍎 AssociationService: 🍎🍎🍎';
 @Injectable()
@@ -27,6 +28,7 @@ export class AssociationService {
     private archiveService: FileArchiverService,
     private userService: UserService,
     private cityService: CityService,
+    private messagingService: MessagingService,
 
     //
     @InjectModel(User.name)
@@ -253,16 +255,32 @@ export class AssociationService {
   }
   public async addAppError(error: AppError): Promise<AppError> {
     Logger.log(`adding AppError${error}`);
-    return await this.appErrorModel.create(error);
+    const err = await this.appErrorModel.create(error);
+    await this.messagingService.sendAppErrorMessage(error);
+    return err;
   }
   public async addAppErrors(errors: AppErrors): Promise<AppError[]> {
-    return await this.appErrorModel.create(errors.appErrorList);
+    const res = await this.appErrorModel.insertMany(errors.appErrorList);
+    await this.messagingService.sendAppErrorMessages(errors);
+    return res;
   }
   public async getAssociationAppErrors(
     associationId: string,
+    startDate: string,
   ): Promise<AppError[]> {
-    Logger.log(`${mm} ... getAssociationAppErrors, id: ${associationId}`);
-    return this.appErrorModel.find({ associationId: associationId }).exec();
+    return this.appErrorModel
+      .find({
+        associationId: associationId,
+        created: { $gte: startDate },
+      })
+      .sort({ created: -1 });
+  }
+  public async getAppErrors(startDate: string): Promise<AppError[]> {
+    return this.appErrorModel
+      .find({
+        created: { $gte: startDate },
+      })
+      .sort({ created: -1 });
   }
 
   public async generateFakeAssociation(

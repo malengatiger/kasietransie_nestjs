@@ -17,7 +17,7 @@ import * as fs from 'fs';
 import { randomUUID } from 'crypto';
 import { MyUtils } from 'src/my-utils/my-utils';
 
-const mm = 'VehicleService';
+const mm = ' 💚 💚 💚 VehicleService  💚';
 
 @Injectable()
 export class VehicleService {
@@ -95,7 +95,8 @@ export class VehicleService {
   public async addRouteAssignments(
     list: RouteAssignmentList,
   ): Promise<RouteAssignment[]> {
-    return await this.assignModel.create(list.assignments);
+    Logger.log(`${mm} ... addRouteAssignments: ${list.assignments}`);
+    return await this.assignModel.insertMany(list.assignments);
   }
   public async getVehicleRouteAssignments(
     vehicleId: string,

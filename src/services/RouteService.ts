@@ -139,15 +139,29 @@ export class RouteService {
     const fileName = await this.archiveService.zip([{ content: jsonString }]);
     return fileName;
   }
-  public async updateRouteColor(
-    routeId: string,
-    color: string,
-  ): Promise<Route> {
-    const r = await this.routeModel.findOne({ routeId: routeId });
-    r.color = color;
-    await this.routeModel.create(r);
-    return r;
+  // public async updateRouteColor(
+  //   routeId: string,
+  //   color: string,
+  // ): Promise<Route> {
+  //   const r = await this.routeModel.findOne({ routeId: routeId });
+  //   r.color = color;
+  //   await this.routeModel.updateOne(r);
+  //   return r;
+  // }
+  async updateRouteColor(routeId: string, color: string): Promise<Route> {
+    const filter = { routeId: routeId };
+    const update = { color: color };
+    const options = { new: true };
+
+    const updatedRoute = await this.routeModel.findOneAndUpdate(
+      filter,
+      update,
+      options,
+    );
+
+    return updatedRoute;
   }
+
   public async addRoutePoints(list: RoutePointList): Promise<number> {
     Logger.log(
       `${mm} addRoutePoints adding ${list.routePoints.length} points ...`,
@@ -223,8 +237,11 @@ export class RouteService {
     const list = await this.routeCityModel.find({
       routeLandmarkId: routeLandmarkId,
     });
+    Logger.log(`${mm} Route Cities to delete: ${list.length}`);
     if (list.length > 0) {
-      await this.routeCityModel.deleteMany(list);
+      await this.routeCityModel.deleteMany({
+        routeLandmarkId: routeLandmarkId,
+      });
     }
     await this.routeLandmarkModel.deleteOne({
       landmarkId: routeLandmarkId,

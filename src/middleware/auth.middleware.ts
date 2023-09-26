@@ -1,4 +1,5 @@
 import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
+import { de } from 'date-fns/locale';
 import { Request, Response, NextFunction } from 'express';
 import * as admin from 'firebase-admin';
 import { MyFirebaseService } from 'src/services/FirebaseService';
@@ -15,10 +16,15 @@ export class AuthMiddleware implements NestMiddleware {
   async use(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     const authToken = req.headers.authorization;
 
-    Logger.log(`${mm} request url: ${req.baseUrl} `);
-    const result = req.baseUrl.includes('removeAllDuplicateRoutePoints');
-    if (result) {
-      Logger.log(`${mm} letting you into the club without a ticket! 🔵 🔵 🔵 `);
+    // Logger.log(`${mm} request url: ${req.baseUrl} `);
+    // Logger.log(`${mm} hostname: ${req.hostname} `);
+    // Logger.log(`${mm} NODE_ENV: ${process.env.NODE_ENV} `);
+    // Logger.log(`${mm} LOCAL_PORT: ${process.env.LOCAL_PORT} `);
+
+    if (process.env.NODE_ENV == 'development') {
+      Logger.log(
+        `${mm} 🔴 letting you into the club without a ticket! 🔵 🔵 🔵 `,
+      );
       next();
       return;
     }

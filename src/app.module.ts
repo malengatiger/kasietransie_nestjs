@@ -100,6 +100,15 @@ import { VehiclePhoto, VehiclePhotoSchema } from './data/models/VehiclePhoto';
 import { VehicleVideo, VehicleVideoSchema } from './data/models/VehicleVideo';
 import { CityService } from './services/CityService';
 import { City, CitySchema } from './data/models/City';
+import { LocationRequestService } from './services/LocationRequestService';
+import {
+  LocationRequest,
+  LocationRequestSchema,
+} from './data/models/LocationRequest';
+import {
+  LocationResponse,
+  LocationResponseSchema,
+} from './data/models/LocationResponse';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -206,6 +215,18 @@ import { City, CitySchema } from './data/models/City';
         schema: RouteUpdateRequestSchema,
       },
     ]),
+    MongooseModule.forFeature([
+      {
+        name: LocationRequest.name,
+        schema: LocationRequestSchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: LocationResponse.name,
+        schema: LocationResponseSchema,
+      },
+    ]),
   ],
 
   controllers: [
@@ -236,6 +257,7 @@ import { City, CitySchema } from './data/models/City';
     VehicleService,
     MediaService,
     CityService,
+    LocationRequestService,
   ],
 })
 //export with middleware
