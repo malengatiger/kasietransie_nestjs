@@ -16,6 +16,11 @@ import { AssociationService } from 'src/association_service/association_service.
 import * as fs from 'fs';
 import { randomUUID } from 'crypto';
 import { MyUtils } from 'src/my-utils/my-utils';
+import { VehicleBag } from '../data/helpers/VehicleBag';
+import { DispatchRecord } from '../data/models/DispatchRecord';
+import { VehicleArrival } from '../data/models/VehicleArrival';
+import { AmbassadorPassengerCount } from '../data/models/AmbassadorPassengerCount';
+import { VehicleDeparture } from '../data/models/VehicleDeparture';
 
 const mm = ' 💚 💚 💚 VehicleService  💚';
 
@@ -26,6 +31,20 @@ export class VehicleService {
     private associationService: AssociationService,
     @InjectModel(Vehicle.name)
     private vehicleModel: mongoose.Model<Vehicle>,
+    @InjectModel(DispatchRecord.name)
+    private dispatchRecordModel: mongoose.Model<DispatchRecord>,
+
+    @InjectModel(VehicleArrival.name)
+    private vehicleArrivalModel: mongoose.Model<VehicleArrival>,
+
+    @InjectModel(VehicleHeartbeat.name)
+    private vehicleHeartbeatModel: mongoose.Model<VehicleHeartbeat>,
+
+    @InjectModel(AmbassadorPassengerCount.name)
+    private ambassadorPassengerCountModel: mongoose.Model<AmbassadorPassengerCount>,
+
+    @InjectModel(VehicleDeparture.name)
+    private vehicleDepartureModel: mongoose.Model<VehicleDeparture>,
 
     @InjectModel(Association.name)
     private associationModel: mongoose.Model<Association>,
@@ -92,6 +111,41 @@ export class VehicleService {
     return await this.vehicleModel.create(vehicle);
   }
 
+  public async getVehicleBag(
+    vehicleId: string,
+    startDate: string,
+  ): Promise<VehicleBag> {
+    const dispatches = await this.dispatchRecordModel.find({
+      vehicleId: vehicleId,
+      created: { $gte: startDate },
+    });
+    const beats = await this.vehicleHeartbeatModel.find({
+      vehicleId: vehicleId,
+      created: { $gte: startDate },
+    });
+    const counts = await this.ambassadorPassengerCountModel.find({
+      vehicleId: vehicleId,
+      created: { $gte: startDate },
+    });
+    const arrivals = await this.vehicleArrivalModel.find({
+      vehicleId: vehicleId,
+      created: { $gte: startDate },
+    });
+    const deps = await this.vehicleDepartureModel.find({
+      vehicleId: vehicleId,
+      created: { $gte: startDate },
+    });
+    //
+    const bag = new VehicleBag();
+    bag.arrivals = arrivals;
+    bag.dispatchRecords = dispatches;
+    bag.created = new Date().toISOString();
+    bag.departures = deps;
+    bag.heartbeats = beats;
+    bag.vehicleId = vehicleId;
+    bag.passengerCounts = counts;
+    return bag;
+  }
   public async addRouteAssignments(
     list: RouteAssignmentList,
   ): Promise<RouteAssignment[]> {
@@ -101,12 +155,12 @@ export class VehicleService {
   public async getVehicleRouteAssignments(
     vehicleId: string,
   ): Promise<RouteAssignment[]> {
-    return await this.assignModel.find({ vehicleId: vehicleId });
+    return this.assignModel.find({ vehicleId: vehicleId });
   }
   public async getRouteAssignments(
     routeId: string,
   ): Promise<RouteAssignment[]> {
-    return await this.assignModel.find({ routeId: routeId });
+    return this.assignModel.find({ routeId: routeId });
   }
   public async generateHeartbeats(
     associationId: string,
@@ -130,9 +184,7 @@ export class VehicleService {
     userId: string,
     page: number,
   ): Promise<Vehicle[]> {
-    return await this.vehicleModel
-      .find({ ownerId: userId })
-      .sort({ vehicleReg: 1 });
+    return this.vehicleModel.find({ ownerId: userId }).sort({ vehicleReg: 1 });
   }
   public async updateVehicleQRCode(vehicle: Vehicle): Promise<number> {
     const url = await MyUtils.createQRCodeAndUploadToCloudStorage(

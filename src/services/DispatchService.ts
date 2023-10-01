@@ -378,39 +378,6 @@ export class DispatchService {
   ): Promise<DispatchRecord[]> {
     return [];
   }
-  public async getVehicleBag(
-    vehicleId: string,
-    startDate: string,
-  ): Promise<VehicleBag> {
-    const dispatches = await this.dispatchRecordModel.find({
-      vehicleId: vehicleId,
-      created: { $gte: startDate },
-    });
-    const beats = await this.vehicleHeartbeatModel.find({
-      vehicleId: vehicleId,
-      created: { $gte: startDate },
-    });
-    const counts = await this.ambassadorPassengerCountModel.find({
-      vehicleId: vehicleId,
-      created: { $gte: startDate },
-    });
-    const arrivals = await this.vehicleArrivalModel.find({
-      vehicleId: vehicleId,
-      created: { $gte: startDate },
-    });
-    const deps = await this.vehicleDepartureModel.find({
-      vehicleId: vehicleId,
-      created: { $gte: startDate },
-    });
-    const bag = new VehicleBag();
-    bag.arrivals = arrivals;
-    bag.dispatchRecords = dispatches;
-    bag.created = new Date().toISOString();
-    bag.departures = deps;
-    bag.heartbeats = beats;
-    bag.vehicleId = vehicleId;
-    return bag;
-  }
   public async getMarshalDispatchRecords(
     marshalId: string,
     startDate: string,

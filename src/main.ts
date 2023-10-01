@@ -10,6 +10,7 @@ import { GoogleAuth } from 'google-auth-library';
 
 import { MyUtils } from './my-utils/my-utils';
 import { MyFirebaseService } from './services/FirebaseService';
+import { ErrorsInterceptor } from './middleware/errors.interceptor';
 const mm = '🔵 🔵 🔵 🔵 🔵 🔵 Kasie Transie Bootstrap 🔵 🔵';
 const env = process.env.NODE_ENV;
 Logger.log(`${mm} Kasie NODE_ENV : ${env}`);
@@ -27,7 +28,8 @@ async function bootstrap() {
   await app.listen(port);
   await srv.initializeFirebase();
   await srv.sendInitializationMessage();
+  app.useGlobalInterceptors(new ErrorsInterceptor());
 }
 bootstrap().then((r) =>
-  Logger.debug(`Bootstrapping is complete. 💖💖💖 ... Boogy on!`),
+  Logger.debug(`Kasie Backend Bootstrapping is complete. 💖💖💖 ... Boogy on!`),
 );

@@ -1,0 +1,29 @@
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { AppError } from '../data/models/AppError';
+import { HttpException } from '@nestjs/common';
+
+@Schema({
+  timestamps: true,
+  collection: 'KasieError',
+})
+export class KasieError extends HttpException {
+  _partitionKey: string;
+  _id: string;
+  @Prop()
+  statusCode: number;
+  @Prop()
+  message: string;
+  @Prop()
+  date: string;
+  @Prop()
+  request: string;
+
+  constructor(statusCode: number, message: string, request: string) {
+    super(`${message} - ${request}`, statusCode);
+    this.statusCode = statusCode;
+    this.message = message;
+    this.date = new Date().toISOString();
+    this.request = request;
+  }
+}
+export const KasieErrorSchema = SchemaFactory.createForClass(KasieError);

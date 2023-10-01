@@ -54,7 +54,7 @@ export class AmbassadorService {
     associationId: string,
     startDate: string,
   ): Promise<AmbassadorPassengerCount[]> {
-    return this.ambassadorPassengerCountModel.findOne({
+    return this.ambassadorPassengerCountModel.find({
       associationId: associationId,
       created: { $gte: startDate },
     });
@@ -63,7 +63,7 @@ export class AmbassadorService {
     vehicleId: string,
     startDate: string,
   ): Promise<AmbassadorPassengerCount[]> {
-    return this.ambassadorPassengerCountModel.findOne({
+    return this.ambassadorPassengerCountModel.find({
       vehicleId: vehicleId,
       created: { $gte: startDate },
     });

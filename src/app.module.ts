@@ -109,6 +109,11 @@ import {
   LocationResponse,
   LocationResponseSchema,
 } from './data/models/LocationResponse';
+import { ErrorsInterceptor } from './middleware/errors.interceptor';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { KasieError, KasieErrorSchema } from './my-utils/kasie.error';
+import { ErrorService } from './services/ErrorService';
+import { ErrorController } from './controllers/error_controller';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -227,6 +232,12 @@ import {
         schema: LocationResponseSchema,
       },
     ]),
+    MongooseModule.forFeature([
+      {
+        name: KasieError.name,
+        schema: KasieErrorSchema,
+      },
+    ]),
   ],
 
   controllers: [
@@ -239,6 +250,7 @@ import {
     RouteController,
     CarController,
     AmbassadorController,
+    ErrorController,
   ],
   providers: [
     AppService,
@@ -258,6 +270,15 @@ import {
     MediaService,
     CityService,
     LocationRequestService,
+    ErrorService,
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: TimeoutInterceptor,
+    // },
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: ErrorsInterceptor,
+    // },
   ],
 })
 //export with middleware

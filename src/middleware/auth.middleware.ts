@@ -22,7 +22,7 @@ export class AuthMiddleware implements NestMiddleware {
     // Logger.log(`${mm} LOCAL_PORT: ${process.env.LOCAL_PORT} `);
 
     if (process.env.NODE_ENV == 'development') {
-      Logger.log(
+      Logger.debug(
         `${mm} 🔴 letting you into the club without a ticket! 🔵 🔵 🔵 `,
       );
       next();

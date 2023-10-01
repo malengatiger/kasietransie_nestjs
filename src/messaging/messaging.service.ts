@@ -13,29 +13,42 @@ import { AppError } from '../data/models/AppError';
 import { AppErrors } from '../data/helpers/AppErrors';
 import { LocationRequest } from '../data/models/LocationRequest';
 import { LocationResponse } from '../data/models/LocationResponse';
+import { KasieError } from '../my-utils/kasie.error';
+
 const mm = '🎽 🎽 🎽 MessagingService';
 @Injectable()
 export class MessagingService {
   constructor() {}
   async sendAppErrorMessages(appErrors: AppErrors) {
     const fmtDate = MyUtils.formatISOStringDate(new Date().toISOString(), null);
-    await this.send(
-      `${Constants.appError}`,
-      `Kasie Application Errors`,
-      `AppErrors at ${fmtDate}`,
-      Constants.appError,
-      JSON.stringify(appErrors.appErrorList, null, 2),
-    );
+    appErrors.appErrorList.forEach((e) => {
+      try {
+        this.sendAppErrorMessage(e);
+      } catch (e) {
+        Logger.debug(`${e}`);
+      }
+    });
     return null;
   }
   async sendAppErrorMessage(appError: AppError) {
     const fmtDate = MyUtils.formatISOStringDate(appError.created, null);
     await this.send(
       `${Constants.appError}`,
-      `Kasie Application Error`,
+      `Kasie Mobile App Error`,
       `${appError.errorMessage} at ${fmtDate}`,
       Constants.appError,
       JSON.stringify(appError, null, 2),
+    );
+    return null;
+  }
+  async sendKasieErrorMessage(kasieError: KasieError) {
+    const fmtDate = MyUtils.formatISOStringDate(kasieError.date, null);
+    await this.send(
+      `${Constants.kasieError}`,
+      `Kasie Server Error`,
+      `${kasieError.message} at: ${fmtDate}`,
+      Constants.kasieError,
+      JSON.stringify(kasieError, null, 2),
     );
     return null;
   }
@@ -143,7 +156,7 @@ export class MessagingService {
       Logger.log(
         `${mm} 🅿️ 🅿️ 🅿️  Successfully sent FCM message: \n🚺 🚺 🚺 ${JSON.stringify(
           message,
-        )} \n🚺 🚺 🚺 FCM response: ${response}`,
+        )} `,
       );
     } catch (error) {
       console.error('Error sending message:', error);

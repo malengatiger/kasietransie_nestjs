@@ -26,6 +26,8 @@ import { LocationRequest } from '../data/models/LocationRequest';
 import { LocationResponse } from '../data/models/LocationResponse';
 import { RouteService } from '../services/RouteService';
 import { VehicleMediaRequest } from '../data/models/VehicleMediaRequest';
+import { VehicleBag } from '../data/helpers/VehicleBag';
+import { KasieError } from '../my-utils/kasie.error';
 
 const mm = ' 🚼 🚼 🚼 RouteController  🚼';
 
@@ -106,11 +108,14 @@ export class CarController {
   async addRouteAssignments(
     @Body('assignments') assignments: RouteAssignmentList,
   ): Promise<RouteAssignment[]> {
-    return await this.addRouteAssignments(assignments);
+    return await this.carService.addRouteAssignments(assignments);
   }
 
   @Get('getOwnerVehicles')
   async getOwnerVehicles(@Query('userId') userId: string): Promise<Vehicle[]> {
+    if (userId) {
+      throw new KasieError(400, 'UserId is missing!', 'getOwnerVehicles');
+    }
     return await this.carService.getOwnerVehicles(userId, 0);
   }
   @Get('getVehicleRouteAssignments')
@@ -118,6 +123,15 @@ export class CarController {
     @Query('vehicleId') vehicleId: string,
   ): Promise<RouteAssignment[]> {
     return await this.carService.getVehicleRouteAssignments(vehicleId);
+  }
+  @Get('getVehicleBag')
+  async getVehicleBag(
+    @Query() query: { vehicleId: string; startDate: string },
+  ): Promise<VehicleBag> {
+    return await this.carService.getVehicleBag(
+      query.vehicleId,
+      query.startDate,
+    );
   }
 
   private sendFile(fileName: string, res: Response) {
