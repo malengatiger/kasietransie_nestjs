@@ -21,6 +21,7 @@ export class ErrorController {
   ): Promise<AppError[]> {
     return await this.errorService.getAppErrors(startDate);
   }
+  //
   @Get('getKasieErrors')
   async getKasieErrors(
     @Query('startDate') startDate: string,

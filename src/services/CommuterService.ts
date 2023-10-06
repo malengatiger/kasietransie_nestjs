@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
@@ -9,6 +9,7 @@ import { CommuterRequest } from 'src/data/models/CommuterRequest';
 import { RouteLandmark } from 'src/data/models/RouteLandmark';
 import { Route } from 'src/data/models/Route';
 import { Position } from 'src/data/models/position';
+import { MessagingService } from '../messaging/messaging.service';
 
 const mm = 'CommuterService';
 
@@ -16,11 +17,10 @@ const mm = 'CommuterService';
 export class CommuterService {
   constructor(
     private configService: ConfigService,
+    private messagingService: MessagingService,
+
     @InjectModel(Commuter.name)
     private commuterModel: mongoose.Model<Commuter>,
-
-    @InjectModel(Position.name)
-    private positionModel: mongoose.Model<Position>,
 
     @InjectModel(CommuterResponse.name)
     private commuterResponseModel: mongoose.Model<CommuterResponse>,
@@ -71,17 +71,30 @@ export class CommuterService {
     return null;
   }
   public async addCommuter(commuter: Commuter): Promise<Commuter> {
-    return null;
+    return this.commuterModel.create(commuter);
   }
   public async addCommuterRequest(
     commuterRequest: CommuterRequest,
   ): Promise<CommuterRequest> {
-    return null;
+    const req = await this.commuterRequestModel.create(commuterRequest);
+    await this.messagingService.sendCommuterRequestMessage(req);
+    return req;
+  }
+  public async getCommuterRequests(
+    associationId: string,
+    startDate: string,
+  ): Promise<CommuterRequest[]> {
+    return this.commuterRequestModel.find({
+      associationId: associationId,
+      dateRequested: { $gte: startDate },
+    });
   }
   public async addCommuterResponse(
     commuterResponse: CommuterResponse,
   ): Promise<CommuterResponse> {
-    return null;
+    const resp = await this.commuterResponseModel.create(commuterResponse);
+    await this.messagingService.sendCommuterResponseMessage(resp);
+    return resp;
   }
   public async generateCommuters(count: number): Promise<Commuter[]> {
     return [];

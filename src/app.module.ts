@@ -109,11 +109,29 @@ import {
   LocationResponse,
   LocationResponseSchema,
 } from './data/models/LocationResponse';
-import { ErrorsInterceptor } from './middleware/errors.interceptor';
-import { APP_INTERCEPTOR } from '@nestjs/core';
 import { KasieError, KasieErrorSchema } from './my-utils/kasie.error';
 import { ErrorService } from './services/ErrorService';
 import { ErrorController } from './controllers/error_controller';
+import {
+  CommuterRequest,
+  CommuterRequestSchema,
+} from './data/models/CommuterRequest';
+import { TimeSeriesService } from './services/TimeSeriesService';
+import {
+  VehicleHeartbeatTimeSeries,
+  VehicleHeartbeatTimeSeriesSchema,
+} from './data/models/VehicleHeartbeatTimeSeries';
+import {
+  AssociationToken,
+  AssociationTokenSchema,
+} from './data/models/AssociationToken';
+import { Commuter, CommuterSchema } from './data/models/Commuter';
+import { CommuterService } from './services/CommuterService';
+import {
+  CommuterResponse,
+  CommuterResponseSchema,
+} from './data/models/CommuterResponse';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -130,6 +148,9 @@ import { ErrorController } from './controllers/error_controller';
     ]),
     MongooseModule.forFeature([
       { name: SettingsModel.name, schema: SettingsModelSchema },
+    ]),
+    MongooseModule.forFeature([
+      { name: AssociationToken.name, schema: AssociationTokenSchema },
     ]),
     MongooseModule.forFeature([
       { name: ExampleFile.name, schema: ExampleFileSchema },
@@ -158,6 +179,18 @@ import { ErrorController } from './controllers/error_controller';
       {
         name: AmbassadorPassengerCount.name,
         schema: AmbassadorPassengerCountSchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: Commuter.name,
+        schema: CommuterSchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: CommuterRequest.name,
+        schema: CommuterRequestSchema,
       },
     ]),
     MongooseModule.forFeature([
@@ -238,6 +271,24 @@ import { ErrorController } from './controllers/error_controller';
         schema: KasieErrorSchema,
       },
     ]),
+    MongooseModule.forFeature([
+      {
+        name: CommuterRequest.name,
+        schema: CommuterRequestSchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: VehicleHeartbeatTimeSeries.name,
+        schema: VehicleHeartbeatTimeSeriesSchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: CommuterResponse.name,
+        schema: CommuterResponseSchema,
+      },
+    ]),
   ],
 
   controllers: [
@@ -271,14 +322,8 @@ import { ErrorController } from './controllers/error_controller';
     CityService,
     LocationRequestService,
     ErrorService,
-    // {
-    //   provide: APP_INTERCEPTOR,
-    //   useClass: TimeoutInterceptor,
-    // },
-    // {
-    //   provide: APP_INTERCEPTOR,
-    //   useClass: ErrorsInterceptor,
-    // },
+    TimeSeriesService,
+    CommuterService,
   ],
 })
 //export with middleware
@@ -287,5 +332,7 @@ export class AppModule implements NestModule {
     Logger.log('Applying AuthMiddleWare configuration');
     consumer.apply(AuthMiddleware).forRoutes('*');
     consumer.apply(ElapsedTimeMiddleware).forRoutes('*');
+    // consumer.apply(ErrorsInterceptor).forRoutes('*');
+    // consumer.apply(TimeoutInterceptor).forRoutes('*');
   }
 }

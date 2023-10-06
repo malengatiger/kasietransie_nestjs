@@ -16,11 +16,11 @@ import { AssociationCounts } from 'src/data/helpers/AssociationCounts';
 import { BigBag } from 'src/data/helpers/BigBag';
 import { CounterBag } from 'src/data/helpers/CounterBag';
 import { DispatchRecordList } from 'src/data/helpers/DispatchRecordList';
-import { VehicleBag } from 'src/data/helpers/VehicleBag';
 import { CommuterRequest } from 'src/data/models/CommuterRequest';
 import { RoutePoint } from 'src/data/models/RoutePoint';
 import { VehicleHeartbeat } from 'src/data/models/VehicleHeartbeat';
 import { MessagingService } from 'src/messaging/messaging.service';
+import { FileArchiverService } from '../my-utils/zipper';
 
 const mm = 'DispatchService';
 
@@ -29,6 +29,8 @@ export class DispatchService {
   constructor(
     private configService: ConfigService,
     private messagingService: MessagingService,
+    private zipService: FileArchiverService,
+
     @InjectModel(User.name)
     private userModel: mongoose.Model<User>,
 
@@ -52,6 +54,8 @@ export class DispatchService {
 
     @InjectModel(VehicleDeparture.name)
     private vehicleDepartureModel: mongoose.Model<VehicleDeparture>,
+    @InjectModel(CommuterRequest.name)
+    private commuterRequestModel: mongoose.Model<CommuterRequest>,
 
     @InjectModel(Route.name)
     private routeModel: mongoose.Model<Route>,
@@ -164,8 +168,53 @@ export class DispatchService {
   public async getAssociationBagZippedFile(
     associationId: string,
     startDate: string,
-  ): Promise<File> {
-    return null;
+  ): Promise<string> {
+    const heartbeats = await this.vehicleHeartbeatModel
+      .find({
+        associationId: associationId,
+        created: { $gte: startDate },
+      })
+      .sort({ created: -1 });
+    const arrivals = await this.vehicleArrivalModel
+      .find({
+        associationId: associationId,
+        created: { $gte: startDate },
+      })
+      .sort({ created: -1 });
+    const departures = await this.vehicleDepartureModel
+      .find({
+        associationId: associationId,
+        created: { $gte: startDate },
+      })
+      .sort({ created: -1 });
+    const dispatches = await this.dispatchRecordModel
+      .find({
+        associationId: associationId,
+        created: { $gte: startDate },
+      })
+      .sort({ created: -1 });
+    const commuterRequests = await this.commuterRequestModel
+      .find({
+        associationId: associationId,
+        dateRequested: { $gte: startDate },
+      })
+      .sort({ created: -1 });
+    const passengerCounts = await this.ambassadorPassengerCountModel
+      .find({
+        associationId: associationId,
+        created: { $gte: startDate },
+      })
+      .sort({ created: -1 });
+
+    const bag: AssociationBag = new AssociationBag();
+    bag.heartbeats = heartbeats;
+    bag.arrivals = arrivals;
+    bag.departures = departures;
+    bag.dispatchRecords = dispatches;
+    bag.commuterRequests = commuterRequests;
+    bag.passengerCounts = passengerCounts;
+    const mString = JSON.stringify(bag);
+    return await this.zipService.zip([{ content: mString }]);
   }
   public async generateRouteDispatchRecords(
     route: Route,
@@ -181,8 +230,7 @@ export class DispatchService {
   ): Promise<DispatchRecord> {
     const res = await this.dispatchRecordModel.create(dispatchRecord);
     await this.messagingService.sendDispatchMessage(dispatchRecord);
-    Logger.log(`${mm} ... add DispatchRecord completed: 🛎🛎`);
-    Logger.log(`${mm} ${res}`);
+    Logger.debug(`${mm} ... add DispatchRecord completed: 🛎🛎`);
     return res;
   }
   public async getVehicleArrivalsByDate(
@@ -331,7 +379,9 @@ export class DispatchService {
   public async addVehicleDeparture(
     vehicleDeparture: VehicleDeparture,
   ): Promise<VehicleDeparture> {
-    return null;
+    const dep = await this.vehicleDepartureModel.create(vehicleDeparture);
+    await this.messagingService.sendVehicleDepartureMessage(dep);
+    return dep;
   }
   public async handleArrival(
     vehicle: Vehicle,
@@ -416,23 +466,27 @@ export class DispatchService {
       vehicleId: vehicleId,
       created: { $gte: startDate },
     });
-    const bags = [];
+    const bags: CounterBag[] = [];
     const bag1 = new CounterBag();
     bag1.count = departures;
     bag1.description = 'VehicleDeparture';
     bags.push(bag1);
+    //
     const bag2 = new CounterBag();
     bag2.count = dispatches;
     bag2.description = 'DispatchRecord';
     bags.push(bag2);
+    //
     const bag3 = new CounterBag();
     bag3.count = arrivals;
     bag3.description = 'VehicleArrival';
     bags.push(bag3);
+    //
     const bag4 = new CounterBag();
     bag4.count = heartbeats;
     bag4.description = 'VehicleHeartbeat';
     bags.push(bag4);
+    //
     const bag5 = new CounterBag();
     bag5.count = passCounts;
     bag5.description = 'AmbassadorPassengerCount';
@@ -519,7 +573,39 @@ export class DispatchService {
     associationId: string,
     startDate: string,
   ): Promise<AssociationCounts> {
-    return null;
+    const departures: number = await this.vehicleDepartureModel.countDocuments({
+      associationId: associationId,
+      created: { $gte: startDate },
+    });
+    const arrivals: number = await this.vehicleArrivalModel.countDocuments({
+      associationId: associationId,
+      created: { $gte: startDate },
+    });
+    const dispatches: number = await this.dispatchRecordModel.countDocuments({
+      associationId: associationId,
+      created: { $gte: startDate },
+    });
+    const heartbeats: number = await this.vehicleHeartbeatModel.countDocuments({
+      associationId: associationId,
+      created: { $gte: startDate },
+    });
+    const passengerCounts: number =
+      await this.ambassadorPassengerCountModel.countDocuments({
+        associationId: associationId,
+        created: { $gte: startDate },
+      });
+    const commuters: number = await this.commuterRequestModel.countDocuments({
+      associationId: associationId,
+      created: { $gte: startDate },
+    });
+    const bag: AssociationCounts = new AssociationCounts();
+    bag.departures = departures;
+    bag.arrivals = arrivals;
+    bag.dispatchRecords = dispatches;
+    bag.heartbeats = heartbeats;
+    bag.commuterRequests = commuters;
+    bag.passengerCounts = passengerCounts;
+    return bag;
   }
   public async fixOwnerToPassengerCounts(
     userId: string,

@@ -9,6 +9,7 @@ import {
   UploadedFile,
   UseInterceptors,
   Get,
+  Res,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { Vehicle } from 'src/data/models/Vehicle';
@@ -28,6 +29,7 @@ import { RouteService } from '../services/RouteService';
 import { VehicleMediaRequest } from '../data/models/VehicleMediaRequest';
 import { VehicleBag } from '../data/helpers/VehicleBag';
 import { KasieError } from '../my-utils/kasie.error';
+import { TimeSeriesService } from '../services/TimeSeriesService';
 
 const mm = ' 🚼 🚼 🚼 RouteController  🚼';
 
@@ -41,6 +43,7 @@ export class CarController {
     private readonly mediaService: MediaService,
     private readonly locationRequestService: LocationRequestService,
     private readonly routeService: RouteService,
+    private readonly timeSeriesService: TimeSeriesService,
   ) {}
 
   @Post('addVehicle')
@@ -110,7 +113,26 @@ export class CarController {
   ): Promise<RouteAssignment[]> {
     return await this.carService.addRouteAssignments(assignments);
   }
-
+  @Get('getAssociationHeartbeatTimeSeries')
+  public async getAssociationHeartbeatTimeSeries(
+    @Query() query: { associationId: string; startDate: string },
+    @Res() res: Response,
+  ) {
+    try {
+      const fileName =
+        await this.timeSeriesService.aggregateAssociationHeartbeatData(
+          query.associationId,
+          query.startDate,
+        );
+      this.sendFile(fileName, res);
+    } catch (error) {
+      Logger.error(
+        `${mm} 👿👿👿👿 Error getAssociationHeartbeatTimeSeries:`,
+        error,
+      );
+      res.status(500).send(`${mm} 👿👿👿 Error downloading file: ${error}`);
+    }
+  }
   @Get('getOwnerVehicles')
   async getOwnerVehicles(@Query('userId') userId: string): Promise<Vehicle[]> {
     if (userId) {

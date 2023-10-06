@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Kasie Transie Web Admin">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="kasie_transie_web">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png" />
+
+  <title>kasie_transie_web</title>
+  <link rel="manifest" href="manifest.json">
+
+  <script>
+    // The value below is injected by flutter build, do not touch.
+    var serviceWorkerVersion = null;
+  </script>
+  <!-- This script adds the flutter initialization JS code -->
+  <script src="flutter.js" defer></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDcVWgFzQtnblu5VTt-CdYXMjKJI8ZJNkg"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.1.0/firebase-messaging-compat.js"></script>
+
+</head>
+
+<body>
+
+<script>
+  console.log('🔷 🔷 🔷 Starting the whole miserable business of javascript FCM!!');
+</script>
+<script>
+  window.addEventListener('load', function (ev) {
+    // Download main.dart.js
+    _flutter.loader.loadEntrypoint({
+      serviceWorker: {
+        serviceWorkerVersion: serviceWorkerVersion,
+      },
+      onEntrypointLoaded: function (engineInitializer) {
+        engineInitializer.initializeEngine().then(function (appRunner) {
+          appRunner.runApp();
+        });
+      }
+    });
+  });
+</script>
+<script src="main.dart.js" type="application/javascript"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    // Service workers are supported. Use them.
+    window.addEventListener('load', function () {
+      // ADD THIS LINE
+      console.log('🍎 🍎 🍎 Register service worker 🍎 🍎 🍎')
+      navigator.serviceWorker.register('/firebase-messaging-sw.js');
+
+      // Wait for registration to finish before dropping the <script> tag.
+      // Otherwise, the browser will load the script multiple times,
+      // potentially different versions.
+      var serviceWorkerUrl = 'flutter_service_worker.js?v=' + serviceWorkerVersion;
+
+    });
+  }
+</script>
+
+</script>
+<script>
+  console.log('🔷 🔷 🔷 set up Firebase Messaging object.....');
+
+  const config = {
+    apiKey: "AIzaSyAdOBFxPS1TacnK5OZTU6VxOQ20Bq8Cyrg",
+    authDomain: "thermal-effort-366015.firebaseapp.com",
+    projectId: "thermal-effort-366015",
+    storageBucket: "thermal-effort-366015.appspot.com",
+    messagingSenderId: "79998394043",
+    appId: "1:79998394043:web:af0eba9987ec6676d6139e",
+    measurementId: "G-0668RQE3NY",
+  }
+
+  const firebaseApp = firebase.initializeApp(config);
+  console.log(`💪💪💪💪💪💪💪 firebase.initializeApp has happened ${firebaseApp}`);
+
+  // Retrieve an instance of Firebase Messaging so that it can handle background
+  // messages.
+  const messaging = firebase.messaging();
+  if (messaging) {
+    console.log(`💪💪💪💪💪💪💪 firebase messaging has been setup`);
+  } else {
+    console.log('Messaging setup fell down like a dog!')
+  }
+  console.log(`💪💪💪💪💪💪💪 requestNotificationPermission ....`);
+  requestNotificationPermission();
+
+  console.log('🔷 🔷 🔷 requestPermission is OK, listen for messages');
+
+  messaging.onMessage(function (payload) {
+    callDartMethod(payload);
+  });
+  console.log('🔷 🔷 🔷 Firebase onMessage seems alright');
+</script>
+  // Function to request permission and get the token
+  async function requestNotificationPermission() {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        console.log('💪💪💪💪💪💪💪 Notification permission granted... Yay!');
+        const token = await messaging.getToken({ vapidKey: 'BA_kOc-IQrUlbie9djVLR-eU6ljeCVizMVs9hulFT7ed6ywWbQAZPWBwZWld15XAmdNPFewiFS5-J3xXqvU1lOs' });
+        console.log('🔴 🔴 🔴 FCM token:', token);
+        mToken = token;
+      } else {
+        console.log('🔴 🔴 Notification permission denied.  🔴 🔴');
+      }
+    } catch (error) {
+      console.log('🔴 🔴 🔴 🔴 Error requesting permission:', error);
+    }
+  }
+
+  var mToken;
+
+  // Function to fetch token and send to server
+  function fetchTokenAndSend(associationId, userId) {
+    console.log('index.html: 🔴 🔴 🔴 fetchTokenAndSend ........');
+    firebase.messaging().getToken()
+      .then(function (token) {
+        if (token) {
+          // Send the token and gameId to your server
+          console.log('index.html:🔴 🔴 🔴 fetchTokenAndSend : Send the token and associationId to backend, no!: ' + associationId + '\ntoken: ' + token);
+          sendTokenToServer(associationId, userId, token);
+        } else {
+          console.log('No FCM token available. WTF?????');
+        }
+      })
+      .catch(function (error) {
+        console.error('Error getting FCM token:', error);
+      });
+  }
+  //
+  function callDartMethod(mData) {
+    const message = {
+      type: 'CALL_DART_METHOD',
+      mData: mData,
+    };
+
+    // Post the message to the Dart app
+    window.parent.postMessage(message, '*');
+  }
+  //
+  function sendTokenToServer(associationId, userId, token) {
+    console.log('index.html:🔴 🔴 🔴 ... sendTokenToServer: Kasie here we come! ........');
+
+    //   // Replace this with your server endpoint
+    // const serverUrl = 'http://localhost:5050/addAssociationToken?associationId=' + associationId + '&token=' + token + '&userId=' + userId;-->
+    const serverUrl = 'http://localhost:5050/api/v1/addAssociationToken?associationId=' + associationId + '&token=' + token + '&userId=' + userId;
+
+    // Make a GET request to send the token to KasieTransie backend
+    fetch(serverUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .then(response => {
+        if (response.ok) {
+          console.log(' 💪 💪 💪 💪 Token sent to server successfully.' + response.body);
+        } else {
+          console.log('🔴 🔴 🔴 Failed to send token to server.' + response.body);
+        }
+      })
+      .catch(error => {
+        console.log('🔴 🔴 🔴 Error sending token to server:', error);
+      });
+  }
+
+
+</script>
+</body>
+
+</html>

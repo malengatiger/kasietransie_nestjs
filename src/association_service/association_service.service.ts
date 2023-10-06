@@ -19,8 +19,11 @@ import { Country } from 'src/data/models/Country';
 import { UserService } from 'src/services/UserService';
 import { CityService } from 'src/services/CityService';
 import { MessagingService } from '../messaging/messaging.service';
+import { AssociationToken } from '../data/models/AssociationToken';
+import { Commuter } from '../data/models/Commuter';
 
 const mm = '🍎🍎🍎 AssociationService: 🍎🍎🍎';
+
 @Injectable()
 export class AssociationService {
   constructor(
@@ -29,29 +32,27 @@ export class AssociationService {
     private userService: UserService,
     private cityService: CityService,
     private messagingService: MessagingService,
-
     //
     @InjectModel(User.name)
     private userModel: mongoose.Model<User>,
-
+    @InjectModel(Commuter.name)
+    private commuterModel: mongoose.Model<Commuter>,
     @InjectModel(AppError.name)
     private appErrorModel: mongoose.Model<AppError>,
-
     @InjectModel(Association.name)
     private associationModel: mongoose.Model<Association>,
-
     @InjectModel(ExampleFile.name)
     private exampleFileModel: mongoose.Model<ExampleFile>,
-
     @InjectModel(Vehicle.name)
     private vehicleModel: mongoose.Model<Vehicle>,
-
     @InjectModel(Country.name)
     private countryModel: mongoose.Model<Country>,
-
+    @InjectModel(AssociationToken.name)
+    private associationTokenModel: mongoose.Model<AssociationToken>,
     @InjectModel(SettingsModel.name)
     private settingsModel: mongoose.Model<SettingsModel>,
   ) {}
+
   //----------------------------------------------------------------
   public async getAssociations(): Promise<Association[]> {
     Logger.log(`${mm} ... getAssociations starting ...`);
@@ -59,6 +60,7 @@ export class AssociationService {
     Logger.log(`${mm} ... getAssociations found: ${list.length} ...`);
     return list;
   }
+
   public async getAssociationUsers(associationId: string): Promise<User[]> {
     Logger.log(
       `${mm} ... getAssociationUsers starting, id: ${associationId} ...`,
@@ -67,6 +69,7 @@ export class AssociationService {
     Logger.log(`${mm} ... getAssociationUsers found: ${list.length} ...`);
     return list;
   }
+
   public async getAssociationVehicles(
     associationId: string,
   ): Promise<Vehicle[]> {
@@ -77,6 +80,7 @@ export class AssociationService {
     Logger.log(`${mm} ... getAssociationVehicles found: ${list.length} ...`);
     return list;
   }
+
   public async getAssociationVehiclesZippedFile(
     associationId: string,
   ): Promise<string> {
@@ -90,6 +94,7 @@ export class AssociationService {
     Logger.log(`${mm} ... getAssociationVehicles found: ${list.length} ...`);
     return file;
   }
+
   public async getOwnerVehiclesZippedFile(userId: string): Promise<string> {
     const list = await this.vehicleModel.find({ ownerId: userId });
     const json = JSON.stringify(list);
@@ -100,6 +105,7 @@ export class AssociationService {
     );
     return file;
   }
+
   public async getCountryCitiesZippedFile(countryId: string): Promise<string> {
     Logger.log(
       `${mm} ... getCountryCitiesZippedFile starting, id: ${countryId} ...`,
@@ -113,15 +119,19 @@ export class AssociationService {
     );
     return file;
   }
+
   public async getAssociationById(associationId: string): Promise<Association> {
     return await this.associationModel.findOne({
       associationId: associationId,
     });
   }
+
   public async getCountries(): Promise<Country[]> {
     return await this.countryModel.find({});
   }
+
   T;
+
   public async getAssociationSettingsModels(
     associationId: string,
   ): Promise<SettingsModel[]> {
@@ -133,11 +143,13 @@ export class AssociationService {
     );
     return list;
   }
+
   public async getAllSettingsModels(): Promise<SettingsModel[]> {
     const list = await this.settingsModel.find({});
     Logger.log(`${mm} ... getAllSettingsModels found: ${list.length} ...`);
     return list;
   }
+
   public async downloadExampleVehiclesFile(): Promise<File> {
     return null;
   }
@@ -147,16 +159,19 @@ export class AssociationService {
     const fileName = `users.csv`;
     return this.downloadFileFromStorage(fileName);
   }
+
   public async downloadExampleUserJSONFile(): Promise<string> {
     Logger.log(`${mm} .... downloadExampleUserJSONFile ...................`);
     const fileName = `users.json`;
     return this.downloadFileFromStorage(fileName);
   }
+
   public async downloadExampleVehicleCSVFile(): Promise<string> {
     Logger.log(`${mm} .... downloadExampleVehicleCSVFile ...................`);
     const fileName = `vehicles.csv`;
     return this.downloadFileFromStorage(fileName);
   }
+
   public async downloadExampleVehicleJSONFile(): Promise<string> {
     Logger.log(`${mm} .... downloadExampleVehicleJSONFile ...................`);
     const fileName = `vehicles.json`;
@@ -249,21 +264,41 @@ export class AssociationService {
     Logger.log(`association registered: ${ass.associationName}`);
     return bag;
   }
+
   public async addSettingsModel(model: SettingsModel): Promise<SettingsModel> {
     Logger.log(`adding addSettingsModel${model}`);
     return await this.settingsModel.create(model);
   }
+
   public async addAppError(error: AppError): Promise<AppError> {
     Logger.log(`adding AppError${error}`);
     const err = await this.appErrorModel.create(error);
     await this.messagingService.sendAppErrorMessage(error);
     return err;
   }
+
+  public async addAssociationToken(
+    associationId: string,
+    userId: string,
+    token: string,
+  ): Promise<AssociationToken> {
+    const at: AssociationToken = new AssociationToken();
+    at.associationId = associationId;
+    at.userId = userId;
+    at.token = token;
+    await this.associationTokenModel.deleteOne({
+      associationId: associationId,
+      userId: userId,
+    });
+    return await this.associationTokenModel.create(at);
+  }
+
   public async addAppErrors(errors: AppErrors): Promise<AppError[]> {
     const res = await this.appErrorModel.insertMany(errors.appErrorList);
     await this.messagingService.sendAppErrorMessages(errors);
     return res;
   }
+
   public async getAssociationAppErrors(
     associationId: string,
     startDate: string,
@@ -275,6 +310,10 @@ export class AssociationService {
       })
       .sort({ created: -1 });
   }
+  public async getRandomCommuters(limit: number): Promise<Commuter[]> {
+    return this.commuterModel.find({}).limit(limit);
+  }
+
   public async getAppErrors(startDate: string): Promise<AppError[]> {
     return this.appErrorModel
       .find({
@@ -292,9 +331,11 @@ export class AssociationService {
   ): Promise<RegistrationBag> {
     return null;
   }
+
   public async getExampleFiles(): Promise<ExampleFile[]> {
     return this.exampleFileModel.find({});
   }
+
   public async upLoadExampleFiles(files: File[]): Promise<ExampleFile[]> {
     return [];
   }

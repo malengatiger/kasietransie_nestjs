@@ -3,6 +3,11 @@ import { HeartbeatMeta } from './HeartbeatMeta';
 @Schema({
   timestamps: true,
   collection: 'VehicleHeartbeatTimeSeries',
+  timeseries: {
+    timeField: 'timeStamp',
+    metaField: 'metaData',
+    granularity: 'hours',
+  },
 })
 export class VehicleHeartbeatTimeSeries {
   @Prop()

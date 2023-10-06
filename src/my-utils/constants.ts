@@ -15,6 +15,8 @@ export class Constants {
   public static readonly passengerCount = 'passengerCount';
   public static readonly heartbeat = 'heartbeat';
   public static readonly commuterRequest = 'commuterRequest';
+  public static readonly commuterResponse = 'commuterResponse';
+
   public static readonly locationRequest = 'locationRequest';
 
   public static readonly locationResponse = 'locationResponse';

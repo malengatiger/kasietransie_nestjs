@@ -6,6 +6,8 @@ import { DispatchRecord } from 'src/data/models/DispatchRecord';
 import { AmbassadorService } from 'src/services/AmbassadorService';
 import { DispatchService } from 'src/services/DispatchService';
 import { MyFirebaseService } from 'src/services/FirebaseService';
+import { AssociationCounts } from '../data/helpers/AssociationCounts';
+import { VehicleDeparture } from '../data/models/VehicleDeparture';
 
 @Controller('api/v1')
 export class DispatchController {
@@ -21,6 +23,12 @@ export class DispatchController {
   ): Promise<DispatchRecord> {
     return await this.dispatchService.addDispatchRecord(dispatchRecord);
   }
+  @Post('addVehicleDeparture')
+  async addVehicleDeparture(
+    @Body() departure: VehicleDeparture,
+  ): Promise<VehicleDeparture> {
+    return await this.dispatchService.addVehicleDeparture(departure);
+  }
   //getVehicleAmbassadorPassengerCounts
   @Get('getVehicleAmbassadorPassengerCounts')
   async getVehicleAmbassadorPassengerCounts(
@@ -28,6 +36,15 @@ export class DispatchController {
   ): Promise<AmbassadorPassengerCount[]> {
     return await this.ambassadorService.getVehicleAmbassadorPassengerCounts(
       query.vehicleId,
+      query.startDate,
+    );
+  }
+  @Get('getAssociationCounts')
+  async getAssociationCounts(
+    @Query() query: { associationId: string; startDate: string },
+  ): Promise<AssociationCounts> {
+    return await this.dispatchService.getAssociationCounts(
+      query.associationId,
       query.startDate,
     );
   }

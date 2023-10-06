@@ -3,9 +3,10 @@ import { DispatchRecord } from 'src/data/models/DispatchRecord';
 import { VehicleArrival } from 'src/data/models/VehicleArrival';
 import { VehicleDeparture } from 'src/data/models/VehicleDeparture';
 import { VehicleHeartbeat } from 'src/data/models/VehicleHeartbeat';
+import { AmbassadorPassengerCount } from '../models/AmbassadorPassengerCount';
 
 export class AssociationBag {
-  passengerCounts: [];
+  passengerCounts: AmbassadorPassengerCount[];
   heartbeats: VehicleHeartbeat[];
   arrivals: VehicleArrival[];
   departures: VehicleDeparture[];

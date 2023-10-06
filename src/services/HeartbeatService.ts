@@ -10,6 +10,7 @@ import { Vehicle } from 'src/data/models/Vehicle';
 import { VehicleHeartbeat } from 'src/data/models/VehicleHeartbeat';
 import { MessagingService } from 'src/messaging/messaging.service';
 import { MyUtils } from 'src/my-utils/my-utils';
+import { TimeSeriesService } from './TimeSeriesService';
 
 const mm = '🌶🌶🌶 HeartbeatService 🌶 ';
 
@@ -17,6 +18,7 @@ const mm = '🌶🌶🌶 HeartbeatService 🌶 ';
 export class HeartbeatService {
   constructor(
     private configService: ConfigService,
+    private readonly timeSeriesService: TimeSeriesService,
     private messagingService: MessagingService,
     @InjectModel(Vehicle.name)
     private vehicleModel: mongoose.Model<Vehicle>,
@@ -49,7 +51,12 @@ export class HeartbeatService {
     heartbeat: VehicleHeartbeat,
   ): Promise<VehicleHeartbeat> {
     const m = await this.vehicleHeartbeatModel.create(heartbeat);
-    await this.messagingService.sendHeartbeatMessage(heartbeat);
+    await this.timeSeriesService.addHeartbeatTimeSeries(
+      heartbeat.associationId,
+      heartbeat.vehicleId,
+      heartbeat.vehicleReg,
+    );
+    await this.messagingService.sendHeartbeatMessage(m);
     return m;
   }
   public async generateRouteHeartbeats(
@@ -70,22 +77,19 @@ export class HeartbeatService {
     return list;
   }
   public async countVehicleHeartbeats(vehicleId: string): Promise<number> {
-    return await this.vehicleHeartbeatModel
-      .find({ vehicleId: vehicleId })
-      .count();
+    return this.vehicleHeartbeatModel.find({ vehicleId: vehicleId }).count();
   }
   public async getOwnerVehicleHeartbeats(
     userId: string,
     cutoffHours: number,
   ): Promise<VehicleHeartbeat[]> {
     const startDate = MyUtils.getStartDate(cutoffHours);
-    const list = await this.vehicleHeartbeatModel.find({
+    return this.vehicleHeartbeatModel.find({
       ownerId: userId,
       created: { $gte: startDate },
     });
-
-    return list;
   }
+
   public async writeHeartbeat(
     vehicleId: string,
     startDate: string,
@@ -94,7 +98,7 @@ export class HeartbeatService {
     pointsFiltered: RoutePoint[],
   ): Promise<VehicleHeartbeat> {
     const date: Date = new Date(startDate);
-    pointsFiltered.forEach(async (point) => {
+    for (const point of pointsFiltered) {
       date.setMinutes(Math.random() * 10);
       const choice = Math.random() * 100;
       if (choice > 10) {
@@ -117,7 +121,7 @@ export class HeartbeatService {
           Logger.error(error);
         }
       }
-    });
+    }
     return null;
   }
 }

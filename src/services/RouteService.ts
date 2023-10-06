@@ -16,8 +16,6 @@ import { MessagingService } from 'src/messaging/messaging.service';
 import { RoutePointList } from 'src/data/models/RoutePointList';
 import { City } from 'src/data/models/City';
 import { CityService } from './CityService';
-import { compareAsc, format } from 'date-fns';
-import parseISO from 'date-fns/fp/parseISO';
 
 const mm = 'RouteService';
 
@@ -85,11 +83,7 @@ export class RouteService {
     });
     return routeLandmarks;
   }
-  // public async getAssociationRouteZippedFile(
-  //   associationId: string,
-  // ): Promise<File> {
-  //   return null;
-  // }
+
   public async addRoute(route: Route): Promise<Route> {
     const url = await MyUtils.createQRCodeAndUploadToCloudStorage(
       JSON.stringify(route),
@@ -327,39 +321,28 @@ export class RouteService {
 
     await Promise.all(
       routes.map(async (route) => {
-        // Logger.log(
-        //   `${mm} getAssociationRouteZippedFile: 🍎🍎 🍎🍎 🍎🍎 route: ${route.name} `,
-        // );
         const list = await this.routePointModel.find({
           routeId: route.routeId,
         });
         points.push(list);
-        // Logger.log(
-        //   `${mm}  \t🍎🍎 route: ${route.name} routePoints: ${list.length} `,
-        // );
 
         const list1 = await this.routeLandmarkModel.find({
           routeId: route.routeId,
         });
-        // Logger.log(
-        //   `${mm}  \t🍎🍎 route: ${route.name} routeLandmarks: ${list1.length} `,
-        // );
+
         landmarks.push(list1);
 
         const list2 = await this.routeCityModel.find({
           routeId: route.routeId,
         });
         cities.push(list2);
-        // Logger.log(
-        //   `${mm}  \t🍎🍎 route: ${route.name} routeCities: ${list2.length} \n\n`,
-        // );
       }),
     );
     //
-    // Logger.log(`${mm} data.route:   🔷🔷 ${routes.length} routes`);
-    // Logger.log(`${mm} data.marks:   🔷🔷 ${landmarks.length} marks`);
-    // Logger.log(`${mm} data.cities:  🔷🔷 ${cities.length} cities`);
-    // Logger.log(`${mm} data.points:  🔷🔷 ${points.length} points`);
+    Logger.debug(`${mm} data.route:   🔷🔷 ${routes.length} routes`);
+    Logger.debug(`${mm} data.marks:   🔷🔷 ${landmarks.length} marks`);
+    Logger.debug(`${mm} data.cities:  🔷🔷 ${cities.length} cities`);
+    Logger.debug(`${mm} data.points:  🔷🔷 ${points.length} points`);
 
     const data = {
       routes: routes,
@@ -368,13 +351,12 @@ export class RouteService {
       cities: cities,
     };
     const mString = JSON.stringify(data);
-    Logger.log(`${mm} string to archive: ${mString.length} bytes`);
-    const fileName = this.archiveService.zip([
+    Logger.debug(`${mm} string to archive: ${mString.length} bytes`);
+    return this.archiveService.zip([
       {
         content: mString,
       },
     ]);
-    return fileName;
   }
   public async getAssociationRouteCities(
     associationId: string,
@@ -388,23 +370,19 @@ export class RouteService {
   }
 
   public async getAssociationRoutes(associationId: string): Promise<Route[]> {
-    return await this.routeModel.find({ associationId: associationId });
+    return this.routeModel.find({ associationId: associationId });
   }
   public async getRoutePoints(routeId: string): Promise<RoutePoint[]> {
-    const points = await this.routePointModel
-      .find({ routeId: routeId })
-      .sort({ index: 1 });
-    return points;
+    return this.routePointModel.find({ routeId: routeId }).sort({ index: 1 });
   }
 
   public async getRoutePointsZipped(routeId: string): Promise<string> {
     const points = await this.routePointModel.find({ routeId: routeId });
     const json = JSON.stringify(points);
-    const filePath = this.archiveService.zip([{ content: json }]);
-    return filePath;
+    return this.archiveService.zip([{ content: json }]);
   }
   public async getRoute(routeId: string): Promise<Route> {
-    return await this.routeModel.findOne({ routeId: routeId });
+    return this.routeModel.findOne({ routeId: routeId });
   }
   /**
    * Delete route points starting nearest to supplied location and return remaining points
@@ -453,20 +431,20 @@ export class RouteService {
       })
       .sort({ index: 1 });
     const json = JSON.stringify(list);
-    Logger.log(
+    Logger.debug(
       `${mm} Nearest points found: ${points.length} deletion result: ${res}
       total points remaining: ${list.length} raw json string size: ${json.length} bytes`,
     );
 
-    const filePath = await this.archiveService.zip([{ content: json }]);
-    return filePath;
+    return await this.archiveService.zip([{ content: json }]);
   }
   async removeAllDuplicateRoutePoints(): Promise<any> {
     const list = await this.routeModel.find({});
-    list.forEach(async (route) => {
+    list.forEach((route) => {
       Logger.log(`${mm} Removing routePoints from ${route.name}`);
-      await this.removeDuplicateRoutePoints(route.routeId);
+      this.removeDuplicateRoutePoints(route.routeId);
     });
+    return { message: 'removeAllDuplicateRoutePoints done' };
   }
   async removeDuplicateRoutePoints(routeId: string): Promise<any> {
     let cnt = 0;
