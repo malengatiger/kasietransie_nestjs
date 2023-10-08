@@ -6,6 +6,9 @@ import { HttpException } from '@nestjs/common';
   timestamps: true,
   collection: 'KasieError',
 })
+/**
+ * Error that occurs in the backend code
+ */
 export class KasieError extends HttpException {
   _partitionKey: string;
   _id: string;
