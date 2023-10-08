@@ -28,11 +28,4 @@ export class ErrorController {
   ): Promise<KasieError[]> {
     return await this.errorService.getKasieErrors(startDate);
   }
-  @Get('testKasieErrors')
-  async testKasieErrors(): Promise<any> {
-    if (1 === 1) {
-      throw new KasieError(501, 'Error Testing', 'api/v1/testKasieErrors');
-    }
-    return { status: 203 };
-  }
 }

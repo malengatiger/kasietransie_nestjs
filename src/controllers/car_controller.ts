@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 ////////////////////////////////////////////////////////////////////////
 import {
+  Body,
   Controller,
-  Query,
+  Get,
   Logger,
   Post,
-  Body,
+  Query,
+  Res,
   UploadedFile,
   UseInterceptors,
-  Get,
-  Res,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { Vehicle } from 'src/data/models/Vehicle';
@@ -30,6 +30,7 @@ import { VehicleMediaRequest } from '../data/models/VehicleMediaRequest';
 import { VehicleBag } from '../data/helpers/VehicleBag';
 import { KasieError } from '../my-utils/kasie.error';
 import { TimeSeriesService } from '../services/TimeSeriesService';
+import { Document } from 'mongoose';
 
 const mm = ' 🚼 🚼 🚼 RouteController  🚼';
 
@@ -112,6 +113,23 @@ export class CarController {
     @Body('assignments') assignments: RouteAssignmentList,
   ): Promise<RouteAssignment[]> {
     return await this.carService.addRouteAssignments(assignments);
+  }
+  @Get('getPassengerTimeSeries')
+  public async getPassengerTimeSeries(
+    @Query()
+    query: {
+      associationId: string;
+      routeId: string;
+      vehicleId: string;
+      startDate: string;
+    },
+    // @Res() res: Response,
+  ): Promise<any[]> {
+    return await this.timeSeriesService.getPassengerTimeSeries(
+      query.associationId,
+      query.routeId,
+      query.startDate,
+    );
   }
   @Get('getAssociationHeartbeatTimeSeries')
   public async getAssociationHeartbeatTimeSeries(

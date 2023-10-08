@@ -9,13 +9,16 @@ import { RouteLandmark } from 'src/data/models/RouteLandmark';
 import { User } from 'src/data/models/User';
 import { Vehicle } from 'src/data/models/Vehicle';
 import { MessagingService } from 'src/messaging/messaging.service';
+import { TimeSeriesService } from './TimeSeriesService';
 
 const mm = 'AmbassadorService';
 
 @Injectable()
 export class AmbassadorService {
   constructor(
-    private messagingService: MessagingService,
+    private readonly messagingService: MessagingService,
+    private readonly timeSeriesService: TimeSeriesService,
+
     @InjectModel(Vehicle.name)
     private vehicleModel: mongoose.Model<Vehicle>,
 
@@ -54,24 +57,36 @@ export class AmbassadorService {
     associationId: string,
     startDate: string,
   ): Promise<AmbassadorPassengerCount[]> {
-    return this.ambassadorPassengerCountModel.find({
-      associationId: associationId,
-      created: { $gte: startDate },
-    });
+    const list = await this.ambassadorPassengerCountModel
+      .find({
+        associationId: associationId,
+        created: { $gte: startDate },
+      })
+      .sort({ created: 1 });
+    Logger.debug(`AmbassadorPassengerCounts found : ${list.length}`);
+    return list;
   }
   public async getVehicleAmbassadorPassengerCounts(
     vehicleId: string,
     startDate: string,
   ): Promise<AmbassadorPassengerCount[]> {
-    return this.ambassadorPassengerCountModel.find({
+    const res = await this.ambassadorPassengerCountModel.find({
       vehicleId: vehicleId,
       created: { $gte: startDate },
     });
+    return res;
   }
   public async addAmbassadorPassengerCount(
     count: AmbassadorPassengerCount,
   ): Promise<AmbassadorPassengerCount> {
     const res = await this.ambassadorPassengerCountModel.create(count);
+    await this.timeSeriesService.addPassengerTimeSeries(
+      count.associationId,
+      count.vehicleId,
+      count.vehicleReg,
+      count.routeId,
+      count.passengersIn,
+    );
     await this.messagingService.sendPassengerCountMessage(res);
     return res;
   }

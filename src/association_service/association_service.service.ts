@@ -270,13 +270,6 @@ export class AssociationService {
     return await this.settingsModel.create(model);
   }
 
-  public async addAppError(error: AppError): Promise<AppError> {
-    Logger.log(`adding AppError${error}`);
-    const err = await this.appErrorModel.create(error);
-    await this.messagingService.sendAppErrorMessage(error);
-    return err;
-  }
-
   public async addAssociationToken(
     associationId: string,
     userId: string,
@@ -291,12 +284,6 @@ export class AssociationService {
       userId: userId,
     });
     return await this.associationTokenModel.create(at);
-  }
-
-  public async addAppErrors(errors: AppErrors): Promise<AppError[]> {
-    const res = await this.appErrorModel.insertMany(errors.appErrorList);
-    await this.messagingService.sendAppErrorMessages(errors);
-    return res;
   }
 
   public async getAssociationAppErrors(

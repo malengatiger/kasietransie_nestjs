@@ -29,6 +29,8 @@ export class MessagingService {
   constructor(
     @InjectModel(AssociationToken.name)
     private associationTokenModel: mongoose.Model<AssociationToken>,
+    @InjectModel(KasieError.name)
+    private kasieModel: mongoose.Model<KasieError>,
   ) {}
 
   async sendAppErrorMessages(appErrors: AppErrors) {
@@ -225,9 +227,6 @@ export class MessagingService {
         associationId: associationId,
       });
       if (associationToken) {
-        Logger.debug(
-          `${mm} ... about to send direct message to association web app`,
-        );
         const messageDirect: admin.messaging.Message = {
           token: associationToken.token,
           data: {
@@ -239,15 +238,27 @@ export class MessagingService {
             body: body,
           },
         };
+        if (
+          type === Constants.admin ||
+          type === Constants.appError ||
+          type === Constants.kasieError
+        ) {
+          return;
+        }
         await admin.messaging().send(messageDirect);
       }
 
       Logger.debug(
-        `${mm} 🅿️ 🅿️ 🅿️  Successfully sent FCM message to topic and 
-        to associationToken: \n🚺 🚺 🚺 topic: ${topic} message type: ${type} 🚺 title: ${title}`,
+        `${mm} 🅿️🅿️🅿️ Successfully sent FCM message to topic and associations 🚺 🚺 🚺 topic: ${topic} message type: ${type} 🚺 title: ${title}`,
       );
     } catch (error) {
-      console.error('Error sending message:', error);
+      Logger.error('Error sending message:', error);
+      const err = new KasieError(
+        555,
+        `${type} Message Send Failed`,
+        new Date().toISOString(),
+      );
+      await this.kasieModel.create(err);
     }
   }
 }

@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import { MessagingService } from 'src/messaging/messaging.service';
 import { KasieError } from '../my-utils/kasie.error';
 import { AppError } from '../data/models/AppError';
+import { AppErrors } from '../data/helpers/AppErrors';
 
 const mm: string = '🍎🍎🍎ErrorService';
 
@@ -18,7 +19,17 @@ export class ErrorService {
     @InjectModel(AppError.name)
     private appErrorModel: mongoose.Model<AppError>,
   ) {}
-
+  public async addAppErrors(errors: AppErrors): Promise<AppError[]> {
+    const res = await this.appErrorModel.insertMany(errors.appErrorList);
+    await this.messagingService.sendAppErrorMessages(errors);
+    return res;
+  }
+  public async addAppError(error: AppError): Promise<AppError> {
+    Logger.log(`adding AppError${error}`);
+    const err = await this.appErrorModel.create(error);
+    await this.messagingService.sendAppErrorMessage(error);
+    return err;
+  }
   public async getAppErrors(startDate: string): Promise<AppError[]> {
     const res = await this.appErrorModel
       .find({ created: { $gte: startDate } })
@@ -32,5 +43,8 @@ export class ErrorService {
       .sort({ date: -1 });
     Logger.debug(`KasieErrors found: ${res.length}`);
     return res;
+  }
+  public async addKasieError(error: KasieError): Promise<void> {
+    await this.kasieErrorModel.create(error);
   }
 }

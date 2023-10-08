@@ -35,6 +35,9 @@ import { Commuter } from '../data/models/Commuter';
 import { CommuterRequest } from '../data/models/CommuterRequest';
 import { CommuterService } from '../services/CommuterService';
 import { CommuterResponse } from '../data/models/CommuterResponse';
+import { ErrorService } from '../services/ErrorService';
+import { AmbassadorService } from '../services/AmbassadorService';
+import { AmbassadorPassengerCount } from '../data/models/AmbassadorPassengerCount';
 
 const mm = '🍐🍐🍐 AssociationController';
 
@@ -48,6 +51,8 @@ export class AssociationController {
     private readonly cityService: CityService,
     private readonly dispatchService: DispatchService,
     private readonly commuterService: CommuterService,
+    private readonly errorService: ErrorService,
+    private readonly ambassadorService: AmbassadorService,
   ) {}
 
   @Get('getCountries')
@@ -154,12 +159,17 @@ export class AssociationController {
   public async getAssociationSettingsModels(
     @Query() query: { associationId: string },
   ): Promise<SettingsModel[]> {
-    Logger.log(
-      `${mm} ... getAssociationSettingsModels
-        starting, id: ${query.associationId} ...`,
-    );
     return await this.associationService.getAssociationSettingsModels(
       query.associationId,
+    );
+  }
+  @Get('getAssociationAmbassadorPassengerCounts')
+  public async getAssociationAmbassadorPassengerCounts(
+    @Query() query: { associationId: string; startDate: string },
+  ): Promise<AmbassadorPassengerCount[]> {
+    return await this.ambassadorService.getAssociationAmbassadorPassengerCounts(
+      query.associationId,
+      query.startDate,
     );
   }
   @Get('getRandomCommuters')
@@ -367,12 +377,12 @@ export class AssociationController {
   @Post('addAppError')
   public async addAppError(@Body() error: AppError): Promise<AppError> {
     Logger.log(`${mm} .. adding AppError: ${error}`);
-    return await this.associationService.addAppError(error);
+    return await this.errorService.addAppError(error);
   }
 
   @Post('addAppErrors')
   public async addAppErrors(@Body() errorList: AppErrors): Promise<AppError[]> {
-    return await this.associationService.addAppErrors(errorList);
+    return await this.errorService.addAppErrors(errorList);
   }
 
   public async generateFakeAssociation(

@@ -2,14 +2,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose from 'mongoose';
+import mongoose, { Aggregate, Document, PipelineStage } from 'mongoose';
 import { VehicleHeartbeatAggregationResult } from 'src/data/helpers/VehicleHeartbeatAggregationResult';
 import { VehicleHeartbeatTimeSeries } from '../data/models/VehicleHeartbeatTimeSeries';
 import { HeartbeatMeta } from '../data/models/HeartbeatMeta';
 import { AssociationHeartbeatAggregationResult } from '../data/helpers/AssociationHeartbeatAggregationResult';
 import { FileArchiverService } from '../my-utils/zipper';
-import { Types } from 'mongoose';
-
+import { PassengerTimeSeries } from '../data/models/PassengerTimeSeries';
+import * as moment from 'moment';
 const mm = 'TimeSeriesService';
 
 @Injectable()
@@ -19,6 +19,8 @@ export class TimeSeriesService {
     private zipService: FileArchiverService,
     @InjectModel(VehicleHeartbeatTimeSeries.name)
     private vehicleHeartbeatTimeSeriesModel: mongoose.Model<VehicleHeartbeatTimeSeries>,
+    @InjectModel(PassengerTimeSeries.name)
+    private passengerTimeSeriesModel: mongoose.Model<PassengerTimeSeries>,
   ) {}
 
   public async aggregateVehicleHeartbeatData(
@@ -34,42 +36,32 @@ export class TimeSeriesService {
     // Perform the aggregation using Mongoose
     const mDate = Date.parse(startDate); // Replace with the actual start date
 
-    const aggregationPipeline = [
+    const result = await this.vehicleHeartbeatTimeSeriesModel.aggregate([
       {
         $match: {
+          associationId: associationId, // Replace with the desired associationId
           timestamp: { $gte: new Date(startDate) },
-          associationId: associationId,
         },
       },
       {
-        $project: {
-          date: {
+        $group: {
+          _id: {
             $dateToString: {
               format: '%Y-%m-%d-%H',
               date: '$timestamp',
               timezone: 'UTC',
             },
           },
-          count: 1,
-          meta: '$metaData',
-        },
-      },
-      {
-        $group: {
-          _id: {
-            date: '$date',
-            associationId: '$meta.associationId',
-          },
           total: { $sum: '$count' },
         },
       },
-    ];
-    const results =
-      await this.vehicleHeartbeatTimeSeriesModel.aggregate(aggregationPipeline);
-    Logger.debug(`aggregation results: ${results.length}`);
+    ]);
+    // const results =
+    //   await this.vehicleHeartbeatTimeSeriesModel.aggregate(aggregationPipeline);
+    Logger.debug(`aggregation results: ${result.length}`);
     let sortedResults: AssociationHeartbeatAggregationResult[] = [];
     try {
-      sortedResults = results.sort((a, b) => {
+      sortedResults = result.sort((a, b) => {
         const dt1 = this.parseDate(a.id.year, a.id.month, a.id.day, a.id.hour);
         const dt2 = this.parseDate(b.id.year, b.id.month, b.id.day, b.id.hour);
         return dt1.localeCompare(dt2);
@@ -91,6 +83,51 @@ export class TimeSeriesService {
     const formattedHour = hour < 10 ? `0${hour}` : hour.toString();
 
     return `${formattedYear}-${formattedMonth}-${formattedDay}-${formattedHour}`;
+  }
+  public async getPassengerTimeSeries(
+    associationId: string,
+    routeId: string,
+    startDate: string,
+  ): Promise<any> {
+    const result = await this.passengerTimeSeriesModel
+      .aggregate([
+        {
+          $match: {
+            associationId: associationId,
+            routeId: routeId,
+            timestamp: {
+              $gte: new Date(startDate),
+            },
+          },
+        },
+        {
+          $addFields: {
+            hour: {
+              $dateToString: {
+                format: '%Y-%m-%d %H:00:00',
+                date: '$timestamp',
+                timezone: 'UTC',
+              },
+            },
+          },
+        },
+        {
+          $group: {
+            _id: '$hour',
+            totalPassengers: { $sum: '$passengers' },
+          },
+        },
+        {
+          $sort: {
+            _id: 1,
+          },
+        },
+      ])
+      .exec();
+    Logger.log(
+      `Aggregation complete: ${result.length} passenger aggregates created`,
+    );
+    return result;
   }
   public async buildTimeSeries(
     collectionName: string,
@@ -117,8 +154,28 @@ export class TimeSeriesService {
     series.associationId = associationId;
     series.vehicleId = vehicleId;
 
-    const res = await this.vehicleHeartbeatTimeSeriesModel.create(series);
+    return await this.vehicleHeartbeatTimeSeriesModel.create(series);
+  }
+  public async addPassengerTimeSeries(
+    associationId: string,
+    vehicleId: string,
+    vehicleReg: string,
+    routeId: string,
+    passengers: number,
+  ): Promise<any> {
+    const hbm: HeartbeatMeta = new HeartbeatMeta();
+    hbm.associationId = associationId;
+    hbm.vehicleId = vehicleId;
+    hbm.vehicleReg = vehicleReg;
 
-    return res;
+    const series: PassengerTimeSeries = new PassengerTimeSeries();
+    series.passengers = passengers;
+    series.metaData = hbm;
+    series.timestamp = new Date();
+    series.associationId = associationId;
+    series.vehicleId = vehicleId;
+    series.routeId = routeId;
+
+    return await this.passengerTimeSeriesModel.create(series);
   }
 }

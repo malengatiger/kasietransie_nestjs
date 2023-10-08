@@ -131,6 +131,10 @@ import {
   CommuterResponse,
   CommuterResponseSchema,
 } from './data/models/CommuterResponse';
+import {
+  PassengerTimeSeries,
+  PassengerTimeSeriesSchema,
+} from './data/models/PassengerTimeSeries';
 
 @Module({
   imports: [
@@ -245,6 +249,12 @@ import {
       {
         name: City.name,
         schema: CitySchema,
+      },
+    ]),
+    MongooseModule.forFeature([
+      {
+        name: PassengerTimeSeries.name,
+        schema: PassengerTimeSeriesSchema,
       },
     ]),
     MongooseModule.forFeature([
